@@ -5,7 +5,7 @@
 schema = "gumeasure.datasheet/1"
 model  = "SSA3032X-R"
 vendor = "Siglent Technologies"
-source = "Siglent SSA3000X-R Real-Time Spectrum Analyzer data sheet, DS0703R_E02F, Amplitude Accuracy and Range Specifications, Total amplitude accuracy ±0.7 dB: 20 °C to 30 °C, fc > 100 kHz, input -50 dBm to 0 dBm, att = 20 dB, RBW = VBW = 1 kHz, peak detector, preamp off, 95 % reliability. Values typed from the PDF, to be checked against it before a release"
+source = "Siglent SSA3000X-R Real-Time Spectrum Analyzer data sheet, DS0703R_E02F, Amplitude Accuracy and Range Specifications: Frequency Response, Error and Accuracy. Valid at 20 °C to 30 °C. Accuracies stated with 95 % reliability are taken as normal with k = 1.96. Values typed from the PDF, to be checked against it before a release"
 tcal   = "25 °C"
 band   = "5 K"
 # The marker frequency uncertainty depends on span and RBW and is not given here.
@@ -13,15 +13,87 @@ band   = "5 K"
 [function."level"]
 unit = "dBm"
 
-[[function."level".range]]
-full_scale          = "0 dBm"   # highest input level of the specification
-resolution_included = true
-# TODO: check this. The data sheet states 95 % reliability. It is taken as a rectangular
-# half-width, which gives a larger u than a normal distribution would.
-accuracy            = [{ offset = "0.7 dB" }]
+# Settings the specifications below depend on. Give them to evaluate as `settings`.
+[function."level".settings]
+frequency   = "Hz"
+attenuation = "dB"
+rbw         = "Hz"
+vbw         = "Hz"
+preamp      = "bool"
+detector    = ["positive-peak", "negative-peak", "sample", "normal", "average"]
 
-[[check]]
-function   = "level"
-range      = "0 dBm"
-reading    = "-20 dBm"
-half_width = "0.7 dB"
+[[function."level".range]]
+full_scale          = "20 dBm"   # measurement range up to +20 dBm, 1 MHz to 7.5 GHz
+resolution_included = true
+accuracy            = [{}]       # all accuracy comes from the specifications below
+
+# gumeasure uses the valid specification with the smallest uncertainty.
+
+[[function."level".spec]]
+name  = "total amplitude accuracy"
+valid = { preamp = false, attenuation = "20 dB", rbw = "1 kHz", vbw = "1 kHz", detector = "positive-peak", frequency = { min = "100 kHz", max = "3.2 GHz" }, reading = { min = "-50 dBm", max = "0 dBm" } }
+
+[[function."level".spec.term]]
+name         = "total amplitude accuracy"
+accuracy     = { offset = "0.7 dB" }
+distribution = "normal"
+k            = 1.96   # 95 % reliability
+
+[[function."level".spec]]
+name  = "absolute amplitude accuracy at -20 dBm, preamp off"
+# TODO: check this. The absolute accuracy is stated for RBW = VBW = 1 kHz. VBW is not
+# required here, because the RBW switching terms cover other bandwidths.
+valid = { preamp = false, detector = "positive-peak", reading = "-20 dBm", frequency = { min = "100 kHz", max = "3.2 GHz" } }
+
+[[function."level".spec.term]]
+name         = "absolute amplitude accuracy"   # fc = 50 MHz, att = 20 dB, RBW = VBW = 1 kHz
+accuracy     = { offset = "0.4 dB" }
+distribution = "normal"
+k            = 1.96   # 95 % reliability
+
+[[function."level".spec.term]]
+name     = "frequency response"   # relative to 50 MHz, att = 20 dB
+accuracy = { offset = "0.8 dB" }
+when     = { frequency = { not_equal = "50 MHz" } }
+
+[[function."level".spec.term]]
+name     = "input attenuation switching"   # fc = 50 MHz, relative to att = 20 dB
+accuracy = { offset = "0.5 dB" }
+when     = { attenuation = { not_equal = "20 dB" } }
+
+[[function."level".spec.term]]
+name     = "RBW switching"   # nominal, relative to RBW = 10 kHz
+accuracy = { offset = "0.2 dB" }
+when     = { rbw = { not_equal = "1 kHz" } }
+
+[[function."level".spec.term]]
+# TODO: check this. RBW switching is stated relative to 10 kHz, the absolute accuracy at
+# 1 kHz. Other bandwidths take the step from 1 kHz to 10 kHz on top.
+name     = "RBW switching from 1 kHz to 10 kHz"
+accuracy = { offset = "0.2 dB" }
+when     = { rbw = { none_of = ["1 kHz", "10 kHz"] } }
+
+[[function."level".spec]]
+name  = "absolute amplitude accuracy at -40 dBm, preamp on"
+valid = { preamp = true, attenuation = "20 dB", detector = "positive-peak", reading = "-40 dBm", frequency = { min = "100 kHz", max = "3.2 GHz" } }
+
+[[function."level".spec.term]]
+name         = "absolute amplitude accuracy"   # fc = 50 MHz, att = 20 dB, RBW = VBW = 1 kHz
+accuracy     = { offset = "0.6 dB" }
+distribution = "normal"
+k            = 1.96   # 95 % reliability
+
+[[function."level".spec.term]]
+name     = "frequency response"   # preamp on, relative to 50 MHz, att = 20 dB
+accuracy = { offset = "1.2 dB" }
+when     = { frequency = { not_equal = "50 MHz" } }
+
+[[function."level".spec.term]]
+name     = "RBW switching"
+accuracy = { offset = "0.2 dB" }
+when     = { rbw = { not_equal = "1 kHz" } }
+
+[[function."level".spec.term]]
+name     = "RBW switching from 1 kHz to 10 kHz"
+accuracy = { offset = "0.2 dB" }
+when     = { rbw = { none_of = ["1 kHz", "10 kHz"] } }

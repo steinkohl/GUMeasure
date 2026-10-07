@@ -140,3 +140,54 @@ def test_measured_without_binding_needs_properties():
     )
     assert wrapped.voltage.value == 7.0
     assert wrapped.voltage_range == 10.0
+
+
+class FakeAnalyser:
+    """A fictional spectrum analyser driver for this test."""
+
+    def __init__(self) -> None:
+        self.peak_level = -20.0
+        self.center_frequency = 50e6
+        self.resolution_bandwidth = 1e3
+        self.video_bandwidth = 1e3
+        self.attenuation = 20.0
+        self.preamp = False
+
+
+def test_measured_reads_settings_from_the_instrument():
+    from datetime import date
+
+    from gumeasure.pymeasure import Measured, Prop
+
+    cal = gm.Calibration(
+        "SSA3032X-R", "S", "C", "lab", False, date(2026, 1, 1), date(2027, 1, 1), None
+    )
+    sa = FakeAnalyser()
+    clock = FakeClock()
+    wrapped = Measured(
+        sa,
+        datasheet="gumeasure:siglent.SSA3032X_R",
+        calibrations=[cal],
+        properties={
+            "peak_level": Prop(
+                "level",
+                setting_props={
+                    "frequency": "center_frequency",
+                    "rbw": "resolution_bandwidth",
+                    "vbw": "video_bandwidth",
+                    "attenuation": "attenuation",
+                    "preamp": "preamp",
+                },
+            )
+        },
+        settings={"peak_level": {"detector": "positive-peak"}},
+        temperature="25 °C",
+        clock=clock,
+        sleep=clock.sleep,
+    )
+    m = wrapped.peak_level
+    assert [c.name for c in m.budget] == ["absolute amplitude accuracy"]
+    sa.center_frequency = 1e9
+    assert [c.name for c in wrapped.peak_level.budget] == ["total amplitude accuracy"]
+    s = wrapped.measure("peak_level", settings={"attenuation": "10 dB"})
+    assert "input attenuation switching" in [c.name for c in s.measurement.budget]

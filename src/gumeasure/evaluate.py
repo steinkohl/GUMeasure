@@ -24,7 +24,15 @@ from gumeasure.calibration import (
     out_of_spec,
 )
 from gumeasure.errors import UsageError
-from gumeasure.inputs import CalibrationRecord, Inputs, from_json, to_json
+from gumeasure.inputs import (
+    CalibrationRecord,
+    ConditionRecord,
+    Inputs,
+    SpecRecord,
+    TermRecord,
+    from_json,
+    to_json,
+)
 from gumeasure.model import (
     Contribution,
     Datasheet,
@@ -299,13 +307,16 @@ class _Evaluation:
                 value = self.mode_b(cal, pair, x, column, elapsed)
         if mode == "datasheet":
             a = self.half_width(column, x)
-            self.add(
-                "accuracy",
-                a / _SQRT3,
-                "B",
-                "rectangular",
-                f"data sheet {ds.model}, {self.column_name(column)}",
-            )
+            if a != 0 or not ds.specs:
+                self.add(
+                    "accuracy",
+                    a / _SQRT3,
+                    "B",
+                    "rectangular",
+                    f"data sheet {ds.model}, {self.column_name(column)}",
+                )
+            if ds.specs:
+                self.specification(x)
 
         # D5: no correlation between the contributions.
         u = math.sqrt(math.fsum(c.u * c.u for c in self.budget))
@@ -318,6 +329,121 @@ class _Evaluation:
             issues=tuple(self.issues),
             inputs=to_json(r),
         )
+
+    def holds(self, cond: ConditionRecord, x: float) -> bool | None:
+        """Whether a condition holds. None if its setting was not given."""
+        if cond.key == "reading":
+            actual: bool | float | str = x
+        elif cond.key in self.record.settings:
+            actual = self.record.settings[cond.key]
+        else:
+            return None
+
+        def same(a: object, b: object) -> bool:
+            if isinstance(a, float) and isinstance(b, float):
+                return math.isclose(a, b, rel_tol=1e-9, abs_tol=1e-12)
+            return a == b
+
+        value = cond.value
+        if cond.op == "equal":
+            return same(actual, value)
+        if cond.op == "not_equal":
+            return not same(actual, value)
+        if cond.op in ("one_of", "none_of"):
+            assert isinstance(value, tuple)
+            found = any(same(actual, v) for v in value)
+            return found if cond.op == "one_of" else not found
+        assert isinstance(actual, float) and isinstance(value, float)
+        if cond.op == "min":
+            return actual >= value or same(actual, value)
+        return actual <= value or same(actual, value)
+
+    def describe(self, cond: ConditionRecord) -> str:
+        unit = self.record.datasheet.setting_units.get(cond.key)
+
+        def show(v: object) -> str:
+            if isinstance(v, bool):
+                return "on" if v else "off"
+            if isinstance(v, float) and unit:
+                return units.fmt(v, unit)
+            return str(v)
+
+        words = {
+            "equal": "=",
+            "not_equal": "≠",
+            "min": "≥",
+            "max": "≤",
+            "one_of": "one of",
+            "none_of": "none of",
+        }
+        value = cond.value
+        text = ", ".join(show(v) for v in value) if isinstance(value, tuple) else show(value)
+        return f"{cond.key} {words[cond.op]} {text}"
+
+    def specification(self, x: float) -> None:
+        """The valid specification with the smallest combined uncertainty.
+
+        A specification is valid only if all its conditions are known to hold. Within it, a
+        term applies unless one of its conditions is known not to hold.
+        """
+        # TODO: check this (D25)
+        ds = self.record.datasheet
+        rng = ds.range
+        reasons: list[str] = []
+        found: list[tuple[float, int, SpecRecord, list[tuple[TermRecord, float]], list[str]]] = []
+        for index, spec in enumerate(ds.specs):
+            states = [(c, self.holds(c, x)) for c in spec.valid]
+            failed = [self.describe(c) for c, ok in states if ok is False]
+            missing = sorted({c.key for c, ok in states if ok is None})
+            if failed or missing:
+                why = failed + [f"{key} given" for key in missing]
+                reasons.append(f"{spec.name} needs {', '.join(why)}")
+                continue
+            terms: list[tuple[TermRecord, float]] = []
+            assumed: list[str] = []
+            for term in spec.terms:
+                checks = [(c, self.holds(c, x)) for c in term.when]
+                if any(ok is False for _, ok in checks):
+                    continue
+                acc = term.accuracy
+                a = linear_half_width(
+                    acc.of_reading,
+                    acc.of_range,
+                    acc.offset,
+                    acc.counts,
+                    x,
+                    rng.full_scale,
+                    rng.resolution,
+                )
+                u = a / term.k if term.distribution == "normal" and term.k else a / _SQRT3
+                terms.append((term, u))
+                unknown = sorted({c.key for c, ok in checks if ok is None})
+                if unknown:
+                    names = " and ".join(unknown)
+                    verb = "is" if len(unknown) == 1 else "are"
+                    assumed.append(f"{term.name} is included, because {names} {verb} not given")
+            total = math.fsum(u * u for _, u in terms)
+            found.append((total, index, spec, terms, assumed))
+        if not found:
+            self.issue(
+                "no-specification",
+                f"Data sheet {ds.model} has no specification for these settings. "
+                + ". ".join(r[0].upper() + r[1:] for r in reasons)
+                + ".",
+            )
+            return
+        _, _, spec, terms, assumed = min(found, key=lambda f: (f[0], f[1]))
+        for term, u in terms:
+            stated = f" (k = {term.k:g})" if term.distribution == "normal" else ""
+            self.add(
+                term.name,
+                u,
+                "B",
+                term.distribution,
+                f"data sheet {ds.model}, {spec.name}{stated}",
+            )
+        for text in assumed:
+            self.issue("setting-assumed", text[0].upper() + text[1:] + ".")
 
     def check_certificate(self, cal: CalibrationRecord) -> None:
         """Every point of the certificate in force must lie within the data sheet."""

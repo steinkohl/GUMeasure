@@ -33,6 +33,8 @@ IssueCode = Literal[
     "temperature-assumed",
     "single-reading",
     "linearised",
+    "no-specification",
+    "setting-assumed",
 ]
 ContributionType = Literal["A", "B"]
 Distribution = Literal["normal", "rectangular"]
@@ -56,6 +58,9 @@ SEVERITY: Mapping[str, Severity] = MappingProxyType(
         "single-reading": "note",
         # TODO: check this (D23). Not in the issue table of the design.
         "linearised": "note",
+        # TODO: check this (D25). Not in the issue table of the design.
+        "no-specification": "error",
+        "setting-assumed": "note",
     }
 )
 
@@ -149,13 +154,91 @@ class Range:
         )
 
 
+ConditionOp = Literal["equal", "not_equal", "min", "max", "one_of", "none_of"]
+CONDITION_OPS: tuple[str, ...] = get_args(ConditionOp)
+SettingValue = Quantity | bool | str
+
+
+@dataclass(frozen=True)
+class Condition:
+    """A condition on a setting, or on the reading with the key "reading".
+
+    `value` is a quantity, a bool or a string, or a tuple of them for one_of and none_of.
+    """
+
+    key: str
+    op: str
+    value: Any
+
+
+@dataclass(frozen=True)
+class Term:
+    """One contribution of a specification.
+
+    The half-width follows the linear form of `accuracy`. A "normal" term states an expanded
+    uncertainty with coverage factor k, such as k = 1.96 for "95 %". A "rectangular" term
+    states a limit. `when` lists the settings under which the term applies.
+    """
+
+    name: str
+    accuracy: Accuracy
+    distribution: str = "rectangular"
+    k: float | None = None
+    when: tuple[Condition, ...] = ()
+
+    def __post_init__(self) -> None:
+        object.__setattr__(self, "when", tuple(self.when))
+
+
+@dataclass(frozen=True)
+class Spec:
+    """A specification of a function that holds only under conditions, such as the settings
+    of a spectrum analyser. It replaces the accuracy of the range in data sheet mode.
+    """
+
+    name: str
+    valid: tuple[Condition, ...]
+    terms: tuple[Term, ...]
+
+    def __post_init__(self) -> None:
+        object.__setattr__(self, "valid", tuple(self.valid))
+        object.__setattr__(self, "terms", tuple(self.terms))
+
+
 @dataclass(frozen=True)
 class Function:
+    """A measured quantity of a model.
+
+    `settings` declares the instrument settings that `specs` depend on. Each maps to a unit,
+    such as "Hz" or "dB", to "bool", or to a tuple of allowed strings.
+    """
+
     unit: str
     ranges: tuple[Range, ...]
+    settings: Mapping[str, str | tuple[str, ...]] = field(default_factory=dict)
+    specs: tuple[Spec, ...] = ()
 
     def __post_init__(self) -> None:
         object.__setattr__(self, "ranges", tuple(self.ranges))
+        object.__setattr__(self, "settings", MappingProxyType(dict(self.settings)))
+        object.__setattr__(self, "specs", tuple(self.specs))
+
+    def setting_value(self, name: str, value: Any) -> float | bool | str:
+        """A setting given by the caller, checked and as a JSON-safe value."""
+        kind = self.settings.get(name)
+        if kind is None:
+            known = ", ".join(sorted(self.settings)) or "none"
+            raise UsageError(f"unknown setting {name!r}. Known: {known}")
+        if kind == "bool":
+            if not isinstance(value, bool):
+                raise UsageError(f"setting {name!r} must be true or false, got {value!r}")
+            return value
+        if isinstance(kind, tuple):
+            if value not in kind:
+                raise UsageError(f"setting {name!r} must be one of {kind}, got {value!r}")
+            return str(value)
+        quantity = _as_quantity(value, kind, f"setting {name!r}")
+        return units.magnitude(quantity, kind)
 
 
 @dataclass(frozen=True)
@@ -347,6 +430,7 @@ def validate_datasheet(ds: Datasheet) -> list[tuple[str, str]]:
                 _accuracy(problems, acc, fn.unit, f"{rkey}.accuracy[{k}]")
             if range_.tempco is not None:
                 _accuracy(problems, range_.tempco, fn.unit, f"{rkey}.tempco")
+        _validate_settings(problems, fn, base)
     for i, check in enumerate(ds.checks):
         key = f"check[{i}]"
         fn_ = ds.functions.get(check.function)
@@ -384,6 +468,66 @@ def _dimension(problems: list[tuple[str, str]], value: object, unit: str, key: s
         problems.append((key, f"must have the dimension of {unit}, got {units.plain(value)}"))
         return False
     return True
+
+
+def _validate_settings(problems: list[tuple[str, str]], fn: Function, base: str) -> None:
+    for name, kind in fn.settings.items():
+        key = f"{base}.settings.{name}"
+        if name == "reading":
+            problems.append((key, "'reading' is reserved for the reading itself"))
+        elif isinstance(kind, tuple):
+            if not kind or not all(isinstance(v, str) for v in kind):
+                problems.append((key, "a list of choices must hold strings"))
+        elif kind != "bool":
+            try:
+                units.units_of(kind)
+            except ValueError as err:
+                problems.append((key, str(err)))
+    for i, spec in enumerate(fn.specs):
+        skey = f"{base}.spec[{i}]"
+        for cond in spec.valid:
+            _condition(problems, fn, cond, f"{skey}.valid.{cond.key}")
+        if not spec.terms:
+            problems.append((f"{skey}.term", "a specification needs at least one term"))
+        names = [t.name for t in spec.terms]
+        if len(set(names)) != len(names):
+            problems.append((f"{skey}.term", "term names must be unique"))
+        for j, term in enumerate(spec.terms):
+            tkey = f"{skey}.term[{j}]"
+            _accuracy(problems, term.accuracy, fn.unit, f"{tkey}.accuracy")
+            if term.distribution not in ("normal", "rectangular"):
+                problems.append((f"{tkey}.distribution", "must be normal or rectangular"))
+            elif term.distribution == "normal" and not (term.k and term.k > 0):
+                problems.append((f"{tkey}.k", "a normal term needs a coverage factor k > 0"))
+            elif term.distribution == "rectangular" and term.k is not None:
+                problems.append((f"{tkey}.k", "a rectangular term takes no k"))
+            for cond in term.when:
+                _condition(problems, fn, cond, f"{tkey}.when.{cond.key}")
+
+
+def _condition(problems: list[tuple[str, str]], fn: Function, cond: Condition, key: str) -> None:
+    kind: str | tuple[str, ...] | None = (
+        fn.unit if cond.key == "reading" else fn.settings.get(cond.key)
+    )
+    if kind is None:
+        problems.append((key, f"unknown setting {cond.key!r}"))
+        return
+    if cond.op not in CONDITION_OPS:
+        problems.append((key, f"unknown condition {cond.op!r}"))
+        return
+    values = cond.value if cond.op in ("one_of", "none_of") else (cond.value,)
+    if cond.op in ("one_of", "none_of") and not isinstance(cond.value, tuple):
+        problems.append((key, f"{cond.op} needs a list"))
+        return
+    for value in values:
+        if kind == "bool":
+            ok = isinstance(value, bool) and cond.op in ("equal", "not_equal")
+        elif isinstance(kind, tuple):
+            ok = value in kind and cond.op not in ("min", "max")
+        else:
+            ok = units.is_quantity(value) and units.same_dimension(value, kind)
+        if not ok:
+            problems.append((key, f"{value!r} does not fit the setting {cond.key!r}"))
 
 
 def _accuracy(problems: list[tuple[str, str]], acc: Accuracy, unit: str, key: str) -> None:
@@ -560,6 +704,12 @@ class Instrument:
             ds.function(name)
             if mode not in MODES:
                 raise UsageError(f"mode of {name!r} must be one of {MODES}, got {mode!r}")
+            if mode == "calibration" and ds.function(name).specs:
+                # TODO: check this (D25)
+                raise UsageError(
+                    f"{name!r} has specifications that depend on settings. "
+                    "Calibration mode does not support them yet."
+                )
         for name, source in self.drift.items():
             ds.function(name)
             if source not in DRIFT_SOURCES:
@@ -619,11 +769,14 @@ class Instrument:
         at: datetime,
         temperature: Quantity | str | None = None,
         unit: str | None = None,
+        settings: Mapping[str, Any] | None = None,
     ) -> Measurement:
         """Measurement with uncertainty budget for one series of readings.
 
         `at` is the time of the readings and must be timezone-aware. The clock is never read.
         `unit` converts the result, also between dB and linear units, such as dBm to mW.
+        `settings` are the instrument settings the data sheet declares for the function, such
+        as {"frequency": "1 GHz", "attenuation": "20 dB", "preamp": False}.
         """
         from gumeasure import inputs
         from gumeasure.evaluate import evaluate
@@ -641,7 +794,10 @@ class Instrument:
             raise UsageError(f"readings must be a quantity with a unit of {fn.unit}")
         if unit is not None:
             _check_unit(unit, fn.unit)
-        snapshot = inputs.build(self, function, range_, at, temp, () if unit is None else (unit,))
+        given = {name: fn.setting_value(name, v) for name, v in (settings or {}).items()}
+        snapshot = inputs.build(
+            self, function, range_, at, temp, () if unit is None else (unit,), given
+        )
         return evaluate(readings, snapshot, datasheet=self.datasheet)
 
 

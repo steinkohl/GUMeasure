@@ -38,6 +38,58 @@ A function name with a dot needs quotes: `[function."readback.current"]`.
 | `unit` | unit string | unit of the function, such as `"V"` or `"A"` |
 | `range` | list of tables | the ranges, sorted by full scale |
 
+### `function.<name>.settings`, optional
+
+Instrument settings that the specifications of the function depend on. Each key is a
+setting name. The value is a unit such as `"Hz"` or `"dB"`, `"bool"`, or a list of allowed
+strings. `reading` is reserved for the reading itself.
+
+```toml
+[function.level.settings]
+frequency = "Hz"
+preamp    = "bool"
+detector  = ["positive-peak", "sample"]
+```
+
+### `function.<name>.spec`, optional
+
+Specifications that hold only under conditions, such as the absolute amplitude accuracy of a
+spectrum analyser at 50 MHz. In data sheet mode gumeasure uses the valid specification with
+the smallest combined uncertainty, in place of the accuracy of the range. A function with
+specifications cannot be used in calibration mode yet.
+
+| Key | Type | Meaning |
+|---|---|---|
+| `name` | string | named in the source of each contribution |
+| `valid` | conditions, optional | all must hold, or the specification is not used. A setting that was not given counts as not holding |
+| `term` | list of term tables | the contributions |
+
+### `function.<name>.spec.term`
+
+| Key | Type | Meaning |
+|---|---|---|
+| `name` | string | name of the contribution in the budget |
+| `accuracy` | accuracy table | the half-width, as for a range |
+| `distribution` | `"rectangular"` or `"normal"` | default rectangular. Normal for a stated expanded uncertainty, such as "95 % reliability" |
+| `k` | number | coverage factor of a normal term, such as 1.96 for 95 % |
+| `when` | conditions, optional | the term applies unless one is known not to hold. A setting that was not given counts as holding, with the note `setting-assumed` |
+
+### Conditions
+
+A table of setting names, or `reading`, to a condition. A plain value means equal. A table
+gives other comparisons.
+
+```toml
+valid = { preamp = false, rbw = "1 kHz", reading = { min = "-50 dBm", max = "0 dBm" } }
+when  = { frequency = { not_equal = "50 MHz" }, rbw = { none_of = ["1 kHz", "10 kHz"] } }
+```
+
+| Key | Meaning |
+|---|---|
+| `min`, `max` | at least, at most |
+| `not_equal` | different from |
+| `one_of`, `none_of` | in the list, not in the list |
+
 ### `function.<name>.range`
 
 | Key | Type | Meaning |

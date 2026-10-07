@@ -100,6 +100,20 @@ Each contribution is multiplied by the sensitivity coefficient at the value. Bet
 linear units this is a first-order approximation. The result carries the note `linearised`.
 The conversion is recorded in `inputs`, so `recompute` gives the converted result.
 
+Some instruments state their accuracy in parts that depend on their settings. A spectrum
+analyser has an absolute accuracy at 50 MHz, a frequency response, attenuator and RBW
+switching errors, and a total accuracy for one set of conditions. Give the settings, and
+gumeasure uses the valid specification with the smallest uncertainty:
+
+```python
+sa.evaluate("level", make([-20.0], "dBm"), at=at, settings={
+    "frequency": "50 MHz", "attenuation": "20 dB", "rbw": "1 kHz", "vbw": "1 kHz",
+    "preamp": False, "detector": "positive-peak"})             # ± 0.41 dB instead of ± 0.71 dB
+```
+
+A setting that is not given counts against you: its terms are included. Without a valid
+specification the result has the error `no-specification`, with the conditions that failed.
+
 pint's own `dBu` is dB relative to 1 µW. gumeasure adds `dBV`, `dBmV` and `dBµV` (also `dBuV`).
 
 ## Two modes
@@ -134,7 +148,7 @@ group `gumeasure.datasheets`.
 | `gumeasure:siglent.SDL1020X` | Siglent SDL1020X electronic load: readback and settings | typed from DataSheet-2019.10 |
 | `gumeasure:siglent.SDM3065X`, `SDM3065X_SC` | Siglent SDM3065X DMM: DCV, DCI, resistance, ACV, ACI, frequency, capacitance | typed from DataSheet-2021.05 |
 | `gumeasure:siglent.SPD1305X` | Siglent SPD1305X power supply | values from agnostibench |
-| `gumeasure:siglent.SSA3032X_R` | Siglent SSA3032X-R spectrum analyser: total level accuracy | typed from DS0703R_E02F |
+| `gumeasure:siglent.SSA3032X_R` | Siglent SSA3032X-R spectrum analyser: level accuracy by frequency, attenuation, RBW and preamp | typed from DS0703R_E02F |
 
 Every value typed from a document must be checked against it before a release. Functions
 measured in several frequency bands, such as AC voltage, have one function per band, such as

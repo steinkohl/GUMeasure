@@ -87,6 +87,83 @@
       "title": "CheckFile",
       "type": "object"
     },
+    "ConditionFile": {
+      "additionalProperties": false,
+      "description": "A condition other than equality. Each key given adds a condition.",
+      "properties": {
+        "max": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Max"
+        },
+        "min": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Min"
+        },
+        "none_of": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "None Of"
+        },
+        "not_equal": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Not Equal"
+        },
+        "one_of": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "One Of"
+        }
+      },
+      "title": "ConditionFile",
+      "type": "object"
+    },
     "FunctionFile": {
       "additionalProperties": false,
       "properties": {
@@ -95,6 +172,30 @@
             "$ref": "#/$defs/RangeFile"
           },
           "title": "Range",
+          "type": "array"
+        },
+        "settings": {
+          "additionalProperties": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              }
+            ]
+          },
+          "title": "Settings",
+          "type": "object"
+        },
+        "spec": {
+          "items": {
+            "$ref": "#/$defs/SpecFile"
+          },
+          "title": "Spec",
           "type": "array"
         },
         "unit": {
@@ -172,6 +273,102 @@
         "accuracy"
       ],
       "title": "RangeFile",
+      "type": "object"
+    },
+    "SpecFile": {
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "term": {
+          "items": {
+            "$ref": "#/$defs/TermFile"
+          },
+          "title": "Term",
+          "type": "array"
+        },
+        "valid": {
+          "additionalProperties": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "$ref": "#/$defs/ConditionFile"
+              }
+            ]
+          },
+          "title": "Valid",
+          "type": "object"
+        }
+      },
+      "required": [
+        "name",
+        "term"
+      ],
+      "title": "SpecFile",
+      "type": "object"
+    },
+    "TermFile": {
+      "additionalProperties": false,
+      "properties": {
+        "accuracy": {
+          "$ref": "#/$defs/AccuracyFile"
+        },
+        "distribution": {
+          "default": "rectangular",
+          "enum": [
+            "rectangular",
+            "normal"
+          ],
+          "title": "Distribution",
+          "type": "string"
+        },
+        "k": {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0,
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "K"
+        },
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "when": {
+          "additionalProperties": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "string"
+              },
+              {
+                "$ref": "#/$defs/ConditionFile"
+              }
+            ]
+          },
+          "title": "When",
+          "type": "object"
+        }
+      },
+      "required": [
+        "name",
+        "accuracy"
+      ],
+      "title": "TermFile",
       "type": "object"
     }
   },

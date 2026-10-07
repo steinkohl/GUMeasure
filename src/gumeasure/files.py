@@ -31,10 +31,13 @@ from gumeasure.model import (
     Calibration,
     CalPoint,
     Check,
+    Condition,
     Datasheet,
     Function,
     Origin,
     Range,
+    Spec,
+    Term,
 )
 from gumeasure.units import Quantity
 
@@ -84,11 +87,49 @@ class RangeFile:
 
 
 @dataclass(frozen=True)
+class ConditionFile:
+    """A condition other than equality. Each key given adds a condition."""
+
+    __pydantic_config__: ClassVar[ConfigDict] = _STRICT
+
+    min: str | None = None
+    max: str | None = None
+    not_equal: bool | str | None = None
+    one_of: list[str] | None = None
+    none_of: list[str] | None = None
+
+
+ConditionValue = bool | str | ConditionFile
+
+
+@dataclass(frozen=True)
+class TermFile:
+    __pydantic_config__: ClassVar[ConfigDict] = _STRICT
+
+    name: str
+    accuracy: AccuracyFile
+    distribution: Literal["rectangular", "normal"] = "rectangular"
+    k: Annotated[float, Field(gt=0)] | None = None
+    when: dict[str, ConditionValue] = field(default_factory=dict)
+
+
+@dataclass(frozen=True)
+class SpecFile:
+    __pydantic_config__: ClassVar[ConfigDict] = _STRICT
+
+    name: str
+    term: list[TermFile]
+    valid: dict[str, ConditionValue] = field(default_factory=dict)
+
+
+@dataclass(frozen=True)
 class FunctionFile:
     __pydantic_config__: ClassVar[ConfigDict] = _STRICT
 
     unit: str
     range: list[RangeFile]
+    settings: dict[str, str | list[str]] = field(default_factory=dict)
+    spec: list[SpecFile] = field(default_factory=list)
 
 
 @dataclass(frozen=True)
@@ -253,6 +294,11 @@ def _datasheet(path: str, data: dict[str, Any], sha: str) -> Datasheet:
             functions={
                 name: Function(
                     unit=fn.unit,
+                    settings=_settings(fn),
+                    specs=tuple(
+                        _spec(path, f"function.{name}.spec[{i}]", sp, fn)
+                        for i, sp in enumerate(fn.spec)
+                    ),
                     ranges=tuple(
                         Range(
                             full_scale=r.full_scale,
@@ -281,6 +327,62 @@ def _datasheet(path: str, data: dict[str, Any], sha: str) -> Datasheet:
         )
     except ModelError as err:
         raise FileFormatError(path, err.problems) from None
+
+
+def _settings(fn: FunctionFile) -> dict[str, str | tuple[str, ...]]:
+    return {k: tuple(v) if isinstance(v, list) else v for k, v in fn.settings.items()}
+
+
+def _spec(path: str, key: str, sp: SpecFile, fn: FunctionFile) -> Spec:
+    return Spec(
+        name=sp.name,
+        valid=_conditions(path, f"{key}.valid", sp.valid, fn),
+        terms=tuple(
+            Term(
+                name=t.name,
+                accuracy=_accuracy(t.accuracy),
+                distribution=t.distribution,
+                k=t.k,
+                when=_conditions(path, f"{key}.term[{j}].when", t.when, fn),
+            )
+            for j, t in enumerate(sp.term)
+        ),
+    )
+
+
+def _conditions(
+    path: str, key: str, given: dict[str, ConditionValue], fn: FunctionFile
+) -> tuple[Condition, ...]:
+    out: list[Condition] = []
+    settings = _settings(fn)
+    for name, raw in given.items():
+        kind = fn.unit if name == "reading" else settings.get(name)
+        if kind is None:
+            raise FileFormatError(path, [(f"{key}.{name}", f"unknown setting {name!r}")])
+        where = f"{key}.{name}"
+        if isinstance(raw, ConditionFile):
+            for op in ("min", "max", "not_equal"):
+                v = getattr(raw, op)
+                if v is not None:
+                    out.append(Condition(name, op, _value(path, f"{where}.{op}", v, kind)))
+            for op in ("one_of", "none_of"):
+                vs = getattr(raw, op)
+                if vs is not None:
+                    values = tuple(_value(path, f"{where}.{op}", v, kind) for v in vs)
+                    out.append(Condition(name, op, values))
+        else:
+            out.append(Condition(name, "equal", _value(path, where, raw, kind)))
+    return tuple(out)
+
+
+def _value(path: str, where: str, v: Any, kind: str | tuple[str, ...]) -> Any:
+    """A condition value: a quantity for a setting with a unit, else as given."""
+    if isinstance(v, bool) or isinstance(kind, tuple) or kind == "bool":
+        return v
+    try:
+        return units.parse_quantity(v)
+    except ValueError as err:
+        raise FileFormatError(path, [(where, str(err))]) from None
 
 
 def _accuracy(a: AccuracyFile) -> Accuracy:

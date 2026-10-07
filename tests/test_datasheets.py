@@ -26,7 +26,10 @@ def test_twin_equals_object(name):
 def test_checks_hold(name):
     ds = gm.datasheet(name)
     results = check_results(ds)
-    assert results
+    # Functions whose accuracy comes from settings-dependent specifications have their worked
+    # examples in test_builtin_use.py.
+    plain = [f for f in ds.functions.values() if not f.specs]
+    assert results or not plain
     assert all(ok for *_, ok in results), [(i, str(got)) for i, _, got, ok in results if not ok]
 
 

@@ -81,6 +81,13 @@ def _parser() -> argparse.ArgumentParser:
     explain.add_argument("--mode", choices=("datasheet", "calibration"), default="datasheet")
     explain.add_argument("--drift", choices=("datasheet", "history"))
     explain.add_argument("--serial")
+    explain.add_argument(
+        "--setting",
+        action="append",
+        default=[],
+        metavar="NAME=VALUE",
+        help="an instrument setting, such as 'rbw=1 kHz' or 'preamp=false'",
+    )
     explain.set_defaults(run=_explain)
     return parser
 
@@ -204,10 +211,28 @@ def _explain(args: argparse.Namespace) -> int:
     unit = inst.datasheet.function(args.function).unit
     readings = units.make([_reading(r, unit) for r in args.reading], unit)
     m = inst.evaluate(
-        args.function, readings, range=args.range, at=_when(args.at), temperature=args.temperature
+        args.function,
+        readings,
+        range=args.range,
+        at=_when(args.at),
+        temperature=args.temperature,
+        settings=_settings(args.setting),
     )
     print(render(inst, args.function, m))
     return 0 if m.usable else 1
+
+
+def _settings(items: Sequence[str]) -> dict[str, object]:
+    """Settings from NAME=VALUE pairs. true, false, on, off, yes and no become booleans."""
+    words = {"true": True, "on": True, "yes": True, "false": False, "off": False, "no": False}
+    out: dict[str, object] = {}
+    for item in items:
+        name, sep, value = item.partition("=")
+        if not sep:
+            raise UsageError(f"--setting needs NAME=VALUE, got {item!r}")
+        value = value.strip()
+        out[name.strip()] = words.get(value.lower(), value)
+    return out
 
 
 def _reading(text: str, unit: str) -> float:

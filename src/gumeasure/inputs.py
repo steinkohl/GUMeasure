@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import datetime as dt
 from collections.abc import Mapping
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime
 from typing import TYPE_CHECKING, Any, ClassVar, Literal
 
@@ -20,7 +20,16 @@ from gumeasure import units
 from gumeasure._version import __version__
 from gumeasure.calibration import Point, in_force
 from gumeasure.errors import UsageError
-from gumeasure.model import Accuracy, Calibration, Origin, Range, interval_name
+from gumeasure.model import (
+    Accuracy,
+    Calibration,
+    Condition,
+    Function,
+    Origin,
+    Range,
+    Spec,
+    interval_name,
+)
 
 if TYPE_CHECKING:
     from gumeasure.model import Instrument
@@ -62,6 +71,38 @@ class RangeRecord:
     tempco: AccuracyRecord | None
 
 
+Scalar = bool | float | str
+
+
+@dataclass(frozen=True)
+class ConditionRecord:
+    __pydantic_config__: ClassVar[ConfigDict] = _STRICT
+
+    key: str
+    op: str
+    value: Scalar | tuple[Scalar, ...]
+
+
+@dataclass(frozen=True)
+class TermRecord:
+    __pydantic_config__: ClassVar[ConfigDict] = _STRICT
+
+    name: str
+    accuracy: AccuracyRecord
+    distribution: str
+    k: float | None
+    when: tuple[ConditionRecord, ...]
+
+
+@dataclass(frozen=True)
+class SpecRecord:
+    __pydantic_config__: ClassVar[ConfigDict] = _STRICT
+
+    name: str
+    valid: tuple[ConditionRecord, ...]
+    terms: tuple[TermRecord, ...]
+
+
 @dataclass(frozen=True)
 class DatasheetRecord:
     __pydantic_config__: ClassVar[ConfigDict] = _STRICT
@@ -75,6 +116,8 @@ class DatasheetRecord:
     intervals: tuple[str, ...]
     intervals_d: tuple[float, ...]
     range: RangeRecord
+    specs: tuple[SpecRecord, ...] = ()
+    setting_units: dict[str, str] = field(default_factory=dict)
 
 
 @dataclass(frozen=True)
@@ -108,6 +151,7 @@ class Inputs:
     calibration: CalibrationRecord | None
     previous: CalibrationRecord | None
     conversions: tuple[str, ...] = ()
+    settings: dict[str, Scalar] = field(default_factory=dict)
 
 
 ADAPTER: TypeAdapter[Inputs] = TypeAdapter(Inputs)
@@ -142,10 +186,12 @@ def build(
     at: datetime,
     temperature: Quantity | None,
     conversions: tuple[str, ...] = (),
+    settings: Mapping[str, Scalar] | None = None,
 ) -> dict[str, Any]:
     """Snapshot for one evaluation, built from the domain objects."""
     ds = instrument.datasheet
-    unit = ds.function(function).unit
+    fn = ds.function(function)
+    unit = fn.unit
     current, previous = in_force(instrument.calibrations, at.date())
     drift = instrument.drift.get(function)
     record = Inputs(
@@ -183,10 +229,14 @@ def build(
                 accuracy=tuple(_accuracy(a, unit) for a in range_.accuracy),
                 tempco=None if range_.tempco is None else _accuracy(range_.tempco, unit),
             ),
+            specs=tuple(_spec(spec, fn) for spec in fn.specs),
+            setting_units={k: v for k, v in fn.settings.items() if isinstance(v, str)}
+            | {"reading": unit},
         ),
         calibration=_calibration(current, function, range_, unit),
         previous=_calibration(previous, function, range_, unit) if drift == "history" else None,
         conversions=conversions,
+        settings=dict(settings or {}),
     )
     return to_json(record)
 
@@ -232,3 +282,34 @@ def _calibration(
             for p in cal.points_of(function, range_.full_scale, unit)
         ),
     )
+
+
+def _spec(spec: Spec, fn: Function) -> SpecRecord:
+    return SpecRecord(
+        name=spec.name,
+        valid=tuple(_condition(c, fn) for c in spec.valid),
+        terms=tuple(
+            TermRecord(
+                name=t.name,
+                accuracy=_accuracy(t.accuracy, fn.unit),
+                distribution=t.distribution,
+                k=t.k,
+                when=tuple(_condition(c, fn) for c in t.when),
+            )
+            for t in spec.terms
+        ),
+    )
+
+
+def _condition(cond: Condition, fn: Function) -> ConditionRecord:
+    kind = fn.unit if cond.key == "reading" else fn.settings[cond.key]
+
+    def value(v: Any) -> Scalar:
+        if isinstance(v, bool | str):
+            return v
+        assert isinstance(kind, str)
+        return units.magnitude(v, kind)
+
+    if isinstance(cond.value, tuple):
+        return ConditionRecord(cond.key, cond.op, tuple(value(v) for v in cond.value))
+    return ConditionRecord(cond.key, cond.op, value(cond.value))

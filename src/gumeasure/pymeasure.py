@@ -67,10 +67,12 @@ class Reader:
         at: datetime | None = None,
         temperature: Quantity | str | None = None,
         unit: str | None = None,
+        settings: Mapping[str, Any] | None = None,
     ) -> Series:
         """Read the property n times, `interval` apart, and evaluate the series.
 
-        `unit` converts the result, also between dB and linear units.
+        `unit` converts the result, also between dB and linear units. `settings` are the
+        instrument settings the data sheet declares for the function.
         """
         if n < 1:
             raise UsageError("n must be 1 or more")
@@ -101,6 +103,7 @@ class Reader:
             at=at if at is not None else times[0],
             temperature=temperature,
             unit=unit,
+            settings=settings,
         )
         return Series(measurement=measurement, readings=readings, times=tuple(times))
 
@@ -130,6 +133,10 @@ class Prop:
     range: Quantity | str | None = None
     range_prop: str | None = None
     raw_unit: str | None = None
+    #: Settings read from the instrument at each measurement: setting name to a property path
+    #: relative to the object that holds the measured property, such as
+    #: {"rbw": "resolution_bandwidth"}. Plain floats are taken in the unit of the setting.
+    setting_props: Mapping[str, str] = field(default_factory=dict)
 
 
 @dataclass(frozen=True)
@@ -174,6 +181,7 @@ class _State:
     properties: dict[str, Prop]
     temperature: TemperatureSource
     unit: Mapping[str, str]
+    settings: Mapping[str, Mapping[str, Any]]
     clock: Callable[[], datetime]
     sleep: Callable[[float], None]
     last: Series | None = None
@@ -240,16 +248,18 @@ class _Node:
         at: datetime | None = None,
         temperature: Quantity | str | None = None,
         unit: str | None = None,
+        settings: Mapping[str, Any] | None = None,
     ) -> Series:
         """Read a measured property n times, `interval` apart, and evaluate the series.
 
-        The Series holds the Measurement and the raw readings with their times.
+        The Series holds the Measurement and the raw readings with their times. `settings`
+        add to or replace the settings of `Measured(settings=...)` and of `Prop.setting_props`.
         """
         path = self._full(name)
         if path not in self._state.properties:
             known = ", ".join(sorted(self._state.properties))
             raise UsageError(f"{path!r} is no measured property. Known: {known}")
-        return self._read(path, n, interval, at, temperature, unit)
+        return self._read(path, n, interval, at, temperature, unit, settings)
 
     def _read(
         self,
@@ -259,6 +269,7 @@ class _Node:
         at: datetime | None,
         temperature: Quantity | str | None,
         unit: str | None,
+        settings: Mapping[str, Any] | None = None,
     ) -> Series:
         state = self._state
         prop = state.properties[path]
@@ -280,12 +291,24 @@ class _Node:
             clock=state.clock,
             sleep=state.sleep,
         )
+        fn = state.instrument.datasheet.function(prop.function)
+        given: dict[str, Any] = dict(state.settings.get(path, {}))
+        for name, setting_path in prop.setting_props.items():
+            raw = holder
+            for part in setting_path.split("."):
+                raw = getattr(raw, part)
+            kind = fn.settings.get(name)
+            if isinstance(kind, str) and kind != "bool" and not units.is_quantity(raw):
+                raw = units.make(float(raw), kind)
+            given[name] = raw
+        given.update(settings or {})
         series = reader.measure(
             n=n,
             interval=interval,
             at=at,
             temperature=temperature,
             unit=unit or state.unit.get(path),
+            settings=given,
         )
         state.last = series
         if state.keep:
@@ -305,6 +328,9 @@ class Measured(_Node):
     - `temperature` is the ambient temperature: a quantity, a string such as "23 °C", or a
       function that returns one at each reading. None notes `temperature-assumed`.
     - `unit` maps a property path to the unit of its result, such as {"ch_1.current": "mA"}.
+    - `settings` maps a property path to fixed instrument settings, such as
+      {"level": {"preamp": False, "attenuation": "20 dB"}}. `Prop.setting_props` reads
+      settings from the instrument instead.
     - `keep` is how many past Series `history` holds. `last` is always the latest Series.
     """
 
@@ -321,6 +347,7 @@ class Measured(_Node):
         properties: Mapping[str, Prop | str] | None = None,
         temperature: TemperatureSource = None,
         unit: Mapping[str, str] | None = None,
+        settings: Mapping[str, Mapping[str, Any]] | None = None,
         keep: int = 0,
         clock: Callable[[], datetime] = utc_now,
         sleep: Callable[[float], None] = time.sleep,
@@ -349,6 +376,7 @@ class Measured(_Node):
             properties=props,
             temperature=temperature,
             unit=dict(unit or {}),
+            settings=dict(settings or {}),
             clock=clock,
             sleep=sleep,
             keep=keep,

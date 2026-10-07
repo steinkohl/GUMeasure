@@ -662,6 +662,7 @@ Every item below marked `#todo: check this` was chosen without the owner. Code t
 | D22 | Temperature outside the band and no `tempco` in the data sheet | New issue `tempco-unknown`, severity error. The accuracy of the data sheet does not hold there. | The issue table of the brief has no code for this case. | `#todo: check this` |
 | D23 | Conversion between dB and linear units | First order: each contribution times the sensitivity coefficient at the value. Note `linearised`. Conversions are listed in `inputs.conversions` and applied by `evaluate` in order. | GUM law of propagation. The exact interval is asymmetric in the other unit. | `#todo: check this` |
 | D24 | Data sheet that refers to TCAL without a number | `tcal` left out. The temperature of the certificate in force is used. Without one, the note `temperature-assumed`. | Siglent DMMs state accuracy at TCAL ±5 °C. | `#todo: check this` |
+| D25 | Accuracy that depends on instrument settings | Functions declare settings. Specifications hold under `valid` conditions. Terms apply under `when` conditions. The valid specification with the smallest u is used. A setting not given makes a specification invalid, but a term apply (note `setting-assumed`). No valid specification: error `no-specification`. Calibration mode is refused for such functions. Settings are recorded in `inputs.settings`. | Spectrum analysers state absolute accuracy, frequency response and switching errors separately. | `#todo: check this` |
 
 ---
 
