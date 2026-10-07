@@ -7,6 +7,7 @@ sheets use the same functions, so equal text gives equal objects.
 
 from __future__ import annotations
 
+import functools
 import math
 import re
 from typing import TYPE_CHECKING, Any, TypeAlias, TypeGuard
@@ -101,7 +102,29 @@ def units_of(unit: str) -> Any:
         raise ValueError(f"unknown unit {unit!r}") from err
 
 
+@functools.lru_cache(maxsize=256)
+def is_logarithmic(unit: str) -> bool:
+    """True for a logarithmic unit such as dBm.
+
+    Differences of a logarithmic unit, such as half-widths, resolutions and deviations, are
+    given in dB. A function in dBm has its readings in dBm and its half-widths in dB.
+    """
+    try:
+        value = make(1.0, unit)
+    except Exception:
+        return False
+    return not bool(value._is_multiplicative) and not bool(
+        value.dimensionality == units_of("kelvin").dimensionality
+    )
+
+
+def _is_decibel(value: Quantity) -> bool:
+    return str(value.units) == "decibel"
+
+
 def same_dimension(value: Quantity, unit: str) -> bool:
+    if is_logarithmic(unit) and _is_decibel(value):
+        return True
     return bool(value.dimensionality == units_of(unit).dimensionality)
 
 
@@ -111,7 +134,12 @@ def is_offset(value: Quantity) -> bool:
 
 
 def magnitude(value: Quantity, unit: str) -> float:
-    """Magnitude of a scalar quantity in the given unit, as a float."""
+    """Magnitude of a scalar quantity in the given unit, as a float.
+
+    For a logarithmic unit, a difference in dB is taken as it is.
+    """
+    if _is_decibel(value) and is_logarithmic(unit):
+        return float(value.magnitude)
     return float(value.to(unit).magnitude)
 
 
@@ -139,10 +167,19 @@ def close(a: float, b: float) -> bool:
 
 def fmt(value: float, unit: str, digits: int = 4) -> str:
     """A value with unit for messages, with an SI prefix that suits it."""
+    if is_logarithmic(unit):
+        return f"{value:.{digits}g} {_symbol(unit)}"
     if value == 0 or not math.isfinite(value):
         return f"{value:g} {_symbol(unit)}"
     compact = make(value, unit).to_compact()
     return f"{compact:.{digits}g~P}"
+
+
+def fmt_delta(value: float, unit: str, digits: int = 4) -> str:
+    """A difference, half-width or uncertainty for messages. In dB for a logarithmic unit."""
+    if is_logarithmic(unit):
+        return f"{value:.{digits}g} dB"
+    return fmt(value, unit, digits)
 
 
 def plain(value: Quantity) -> str:

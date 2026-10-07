@@ -146,6 +146,9 @@ class _Evaluation:
     def fmt(self, value: float) -> str:
         return units.fmt(value, self.record.unit)
 
+    def delta(self, value: float) -> str:
+        return units.fmt_delta(value, self.record.unit)
+
     def column_name(self, column: int) -> str:
         names = self.record.datasheet.intervals
         return f"{names[column]} column" if names else "single accuracy column"
@@ -189,8 +192,14 @@ class _Evaluation:
                 )
 
         # 3. Range.
-        top = max(abs(v) for v in self.values)
-        if top > rng.full_scale * (1 + 1e-12):
+        if units.is_logarithmic(r.unit):
+            # A level in dBm: the full scale is the highest level of the range.
+            top = max(self.values)
+            over = top > rng.full_scale + 1e-12
+        else:
+            top = max(abs(v) for v in self.values)
+            over = top > rng.full_scale * (1 + 1e-12)
+        if over:
             self.issue(
                 "overrange",
                 f"A reading of {self.fmt(top)} is above the full scale {self.fmt(rng.full_scale)}.",
@@ -220,7 +229,7 @@ class _Evaluation:
                 rng.resolution / (2 * _SQRT3),
                 "B",
                 "rectangular",
-                f"resolution {self.fmt(rng.resolution)} of the "
+                f"resolution {self.delta(rng.resolution)} of the "
                 f"{self.fmt(rng.full_scale)} range, data sheet {ds.model}",
             )
 
@@ -284,8 +293,8 @@ class _Evaluation:
                     "certificate-out-of-spec",
                     f"Certificate {cal.certificate}, {self.record.function}, "
                     f"{self.fmt(ds.range.full_scale)} range, {self.fmt(point.reference)}: "
-                    f"deviation {self.fmt(point.deviation)} exceeds the data sheet half-width "
-                    f"{self.fmt(a)} ({self.column_name(column)}).",
+                    f"deviation {self.delta(point.deviation)} exceeds the data sheet half-width "
+                    f"{self.delta(a)} ({self.column_name(column)}).",
                 )
 
     def temperature(self, x: float) -> None:
@@ -357,7 +366,7 @@ class _Evaluation:
             "B",
             "normal",
             f"certificate {cal.certificate} of {cal.laboratory}, deviation "
-            f"{self.fmt(deviation)} {where}",
+            f"{self.delta(deviation)} {where}",
         )
 
         # 11. Short-term accuracy. D1, and TODO: check this (D20): only with two or more
@@ -424,5 +433,5 @@ class _Evaluation:
             "B",
             "rectangular",
             f"certificates {previous.certificate} and {cal.certificate}, largest drift "
-            f"{self.fmt(rate)} per day over {span} days, {elapsed} days since calibration",
+            f"{self.delta(rate)} per day over {span} days, {elapsed} days since calibration",
         )

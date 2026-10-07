@@ -292,7 +292,8 @@ def validate_datasheet(ds: Datasheet) -> list[tuple[str, str]]:
             rkey = f"{base}.range[{j}]"
             if _dimension(problems, range_.full_scale, fn.unit, f"{rkey}.full_scale"):
                 fs = units.magnitude(range_.full_scale, fn.unit)
-                need(fs > 0, f"{rkey}.full_scale", "must be positive")
+                if not units.is_logarithmic(fn.unit):
+                    need(fs > 0, f"{rkey}.full_scale", "must be positive")
                 need(fs > last, f"{rkey}.full_scale", "ranges must be sorted by full scale")
                 last = fs
             if _dimension(problems, range_.resolution, fn.unit, f"{rkey}.resolution"):
@@ -560,8 +561,9 @@ class Instrument:
                                 f"certificate {cal.certificate}, {point.function}, "
                                 f"{units.plain(point.range)} range, "
                                 f"{units.plain(point.reference)}: "
-                                f"{label} deviation {units.fmt(d, unit)} exceeds the data sheet "
-                                f"half-width {units.fmt(a, unit)} ({_column_name(ds, column)})",
+                                f"{label} deviation {units.fmt_delta(d, unit)} exceeds "
+                                f"the data sheet half-width {units.fmt_delta(a, unit)} "
+                                f"({_column_name(ds, column)})",
                             )
                         )
                     if point.deviation_as_found is None:

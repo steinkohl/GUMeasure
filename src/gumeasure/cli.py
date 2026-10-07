@@ -245,12 +245,14 @@ def render(inst: Instrument, function: str, m: Measurement) -> str:
     )
     lines = [
         head,
-        f"value {m.value:.10g} {m.unit}   u {units.fmt(m.u, m.unit)}   "
-        f"U {units.fmt(m.U, m.unit)} (k = {m.k:g})",
+        f"value {m.value:.10g} {m.unit}   u {units.fmt_delta(m.u, m.unit)}   "
+        f"U {units.fmt_delta(m.U, m.unit)} (k = {m.k:g})",
         "",
     ]
     rows = [("contribution", "type", "distribution", "u", "source")]
-    rows += [(c.name, c.type, c.distribution, units.fmt(c.u, m.unit), c.source) for c in m.budget]
+    rows += [
+        (c.name, c.type, c.distribution, units.fmt_delta(c.u, m.unit), c.source) for c in m.budget
+    ]
     widths = [max(len(row[i]) for row in rows) for i in range(4)]
     for row in rows:
         lines.append(
