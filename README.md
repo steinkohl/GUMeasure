@@ -28,6 +28,27 @@ uv add "gumeasure[pymeasure] @ git+https://github.com/steinkohl/GUMeasure"   # w
 
 Python 3.11 or newer.
 
+## With a PyMeasure instrument
+
+```python
+from pymeasure.instruments.siglenttechnologies import SPD1305X
+from gumeasure.pymeasure import Measured
+
+psu = Measured(SPD1305X("TCPIP::192.168.1.20::INSTR"),
+               calibrations=["certificates/SPD1305X-2026.toml"],
+               temperature="23 °C")
+
+psu.ch_1.voltage_setpoint = 5        # passes through to PyMeasure
+m = psu.ch_1.current                 # a Measurement instead of a float
+print(m)                             # 0.182 A ± 12.19 mA (k = 2)
+s = psu.ch_1.measure("current", n=10, interval="20 ms")
+s.measurement, s.readings, s.times   # result, raw readings and their times
+```
+
+`Measured` knows the data sheet and the measured properties of the PyMeasure classes in
+`gumeasure.pymeasure.BINDINGS`. For other classes, give `datasheet` and `properties`, or
+register a `Binding`. `temperature` may also be a function that reads a sensor.
+
 ## First example
 
 ```python
@@ -62,6 +83,24 @@ gumeasure explain --datasheet gumeasure:example.EXAMPLE_DMM \
 gumeasure check src/gumeasure/datasheets examples     # check files and certificates
 gumeasure schema datasheet                            # JSON Schema of the file format
 ```
+
+## dB and linear units
+
+A function may be in a logarithmic unit such as dBm, dBV or dBµV. Its accuracy is then an
+offset in dB. Readings may come in any unit of the same quantity, such as mW for a dBm
+function. A result converts between units, also between dB and linear units:
+
+```python
+m = sa.evaluate("level", make([-30.0, -30.2], "dBm"), at=at)   # -30.1 dBm ± 0.8327 dB (k = 2)
+m.to("mW")                                                     # 0.000977237221 mW ± 187.4 nW (k = 2)
+inst.evaluate(..., unit="mW")                                  # the same in one step
+```
+
+Each contribution is multiplied by the sensitivity coefficient at the value. Between dB and
+linear units this is a first-order approximation. The result carries the note `linearised`.
+The conversion is recorded in `inputs`, so `recompute` gives the converted result.
+
+pint's own `dBu` is dB relative to 1 µW. gumeasure adds `dBV`, `dBmV` and `dBµV` (also `dBuV`).
 
 ## Two modes
 

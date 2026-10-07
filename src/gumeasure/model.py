@@ -9,7 +9,7 @@ from __future__ import annotations
 import datetime as dt
 import math
 from collections.abc import Mapping, Sequence
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from datetime import datetime
 from types import MappingProxyType
 from typing import Any, Literal, get_args
@@ -32,6 +32,7 @@ IssueCode = Literal[
     "extrapolated",
     "temperature-assumed",
     "single-reading",
+    "linearised",
 ]
 ContributionType = Literal["A", "B"]
 Distribution = Literal["normal", "rectangular"]
@@ -53,6 +54,8 @@ SEVERITY: Mapping[str, Severity] = MappingProxyType(
         "extrapolated": "note",
         "temperature-assumed": "note",
         "single-reading": "note",
+        # TODO: check this (D23). Not in the issue table of the design.
+        "linearised": "note",
     }
 )
 
@@ -355,6 +358,10 @@ def _accuracy(problems: list[tuple[str, str]], acc: Accuracy, unit: str, key: st
         value = getattr(acc, attr)
         if not isinstance(value, float | int) or value < 0:
             problems.append((f"{key}.{attr}", "must be a fraction of zero or more"))
+        elif value and units.is_logarithmic(unit):
+            problems.append(
+                (f"{key}.{attr}", f"a function in {unit} takes its accuracy as an offset in dB")
+            )
     if not isinstance(acc.counts, int) or acc.counts < 0:
         problems.append((f"{key}.counts", "must be a whole number of zero or more"))
     if (
@@ -578,10 +585,12 @@ class Instrument:
         range: Quantity | str | None = None,
         at: datetime,
         temperature: Quantity | str | None = None,
+        unit: str | None = None,
     ) -> Measurement:
         """Measurement with uncertainty budget for one series of readings.
 
         `at` is the time of the readings and must be timezone-aware. The clock is never read.
+        `unit` converts the result, also between dB and linear units, such as dBm to mW.
         """
         from gumeasure import inputs
         from gumeasure.evaluate import evaluate
@@ -597,8 +606,18 @@ class Instrument:
             temp = _as_quantity(temperature, "kelvin", "temperature")
         if not units.is_quantity(readings):
             raise UsageError(f"readings must be a quantity with a unit of {fn.unit}")
-        snapshot = inputs.build(self, function, range_, at, temp)
+        if unit is not None:
+            _check_unit(unit, fn.unit)
+        snapshot = inputs.build(self, function, range_, at, temp, () if unit is None else (unit,))
         return evaluate(readings, snapshot, datasheet=self.datasheet)
+
+
+def _check_unit(unit: str, function_unit: str) -> None:
+    try:
+        units.units_of(unit)
+        units.convert(1.0, function_unit, unit)
+    except ValueError as err:
+        raise UsageError(f"cannot give the result in {unit!r}: {err}") from None
 
 
 def _column_name(ds: Datasheet, column: int) -> str:
@@ -651,6 +670,39 @@ class Measurement:
     @property
     def usable(self) -> bool:
         return not any(issue.severity == "error" for issue in self.issues)
+
+    @property
+    def quantity(self) -> Quantity:
+        """The value as a pint quantity."""
+        return units.make(self.value, self.unit)
+
+    @property
+    def uncertainty(self) -> Quantity:
+        """The expanded uncertainty U as a pint quantity. In dB for a logarithmic unit."""
+        unit = "dB" if units.is_logarithmic(self.unit) else self.unit
+        return units.make(self.U, unit)
+
+    def to(self, unit: str) -> Measurement:
+        """The Measurement in another unit, also between dB and linear units.
+
+        Every contribution is multiplied by the sensitivity coefficient at the value. Between
+        dB and linear units this is a first-order approximation, noted as `linearised`. The
+        conversion is recorded in `inputs`, so recompute gives the converted Measurement.
+        """
+        from gumeasure.evaluate import convert_measurement
+
+        _check_unit(unit, self.unit)
+        converted = convert_measurement(self, unit)
+        record = dict(self.inputs)
+        record["conversions"] = [*record.get("conversions", []), unit]
+        return replace(converted, inputs=record)
+
+    def __str__(self) -> str:
+        text = (
+            f"{self.value:.10g} {self.unit} ± {units.fmt_delta(self.U, self.unit)} (k = {self.k:g})"
+        )
+        errors = [i.code for i in self.issues if i.severity == "error"]
+        return text + (f", not usable: {', '.join(errors)}" if errors else "")
 
     def to_dict(self) -> dict[str, Any]:
         """JSON-safe record. The budget has the form {name: {u, type, distribution, source}}."""

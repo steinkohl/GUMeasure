@@ -11,6 +11,10 @@ Start a file with `#:schema <path to the schema>` for completion and checking in
 Taplo. The schemas are `src/gumeasure/schema/datasheet.schema.json` and
 `src/gumeasure/schema/calibration.schema.json`.
 
+A function in a logarithmic unit, such as `unit = "dBm"`, takes readings, full scale and
+references in that unit. Its resolution, `offset`, `half_width`, `deviation` and `U` are in
+dB. `of_reading` and `of_range` must be zero there.
+
 ## Data sheet, `gumeasure.datasheet/1`
 
 | Key | Type | Meaning |

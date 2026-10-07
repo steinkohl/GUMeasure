@@ -454,7 +454,7 @@ class Reader:
     prop: str
     range: Quantity | str | None = None
     range_prop: str | None = None
-    unit: str | None = None                # unit of plain float values, default: unit of the function (D17)
+    raw_unit: str | None = None            # unit of plain float values, default: unit of the function (D17)
     clock: Callable[[], datetime] = utc_now
     sleep: Callable[[float], None] = time.sleep
 
@@ -470,6 +470,10 @@ class Reader:
 - Tests use `pymeasure.test.expected_protocol` with `SPD1305X` and inject `clock` and `sleep`. They need no hardware and do not wait.
 
 ---
+
+### 10.1 Wrapper
+
+`Measured(driver, calibrations=[...])` wraps a PyMeasure instrument. A `Binding` per PyMeasure class names the data sheet and maps property paths such as `ch_1.current` to functions. Reading such a property returns a Measurement of one reading. `node.measure(name, n, interval)` returns a Series. Every other attribute passes through to the driver, reads and writes alike. Writing a measured property raises. `temperature` may be a quantity or a function read at each measurement. `last` and `history` keep the raw Series for storage.
 
 ## 11. Command line
 
@@ -645,7 +649,7 @@ Every item below marked `#todo: check this` was chosen without the owner. Code t
 | D14 | Which certificate `certificate-out-of-spec` uses in `evaluate` | Only the certificate in force, in both modes, by its as-left deviation (D19). `gumeasure check` checks all certificates, as found and as left. | `#todo: check this` |
 | D15 | Bare numbers in fraction fields | Refused. A fraction needs `%` or `ppm`. | `#todo: check this` |
 | D16 | Two certificates of one unit with the same date | `UsageError` when the `Instrument` is built. | `#todo: check this` |
-| D17 | Unit of plain floats from PyMeasure | The unit of the function, unless `Reader(unit=...)` says otherwise. | `#todo: check this` |
+| D17 | Unit of plain floats from PyMeasure | The unit of the function, unless `Reader(raw_unit=...)` or `Prop(raw_unit=...)` says otherwise. | `#todo: check this` |
 | D18 | When the Reader reads `range_prop` | Once, after the last reading of the series. | `#todo: check this` |
 
 ### 13.3 Metrology decisions
@@ -656,6 +660,7 @@ Every item below marked `#todo: check this` was chosen without the owner. Code t
 | D20 | Short-term term (D1) with exactly one interval in the data sheet | Only with two or more intervals. With one interval mode B has no short-term term. | With one interval the only column already contains the drift. `drift = "history"` would count drift twice. | `#todo: check this` |
 | D21 | Reference temperature in mode B | `tcal` and `band` of the data sheet, as in mode A. The certificate temperature is recorded in the snapshot but not used. | The temperature coefficient of the data sheet is stated relative to `tcal`. | `#todo: check this` |
 | D22 | Temperature outside the band and no `tempco` in the data sheet | New issue `tempco-unknown`, severity error. The accuracy of the data sheet does not hold there. | The issue table of the brief has no code for this case. | `#todo: check this` |
+| D23 | Conversion between dB and linear units | First order: each contribution times the sensitivity coefficient at the value. Note `linearised`. Conversions are listed in `inputs.conversions` and applied by `evaluate` in order. | GUM law of propagation. The exact interval is asymmetric in the other unit. | `#todo: check this` |
 
 ---
 

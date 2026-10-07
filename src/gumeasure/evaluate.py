@@ -9,7 +9,7 @@ from __future__ import annotations
 import math
 import statistics
 from collections.abc import Callable, Mapping
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from typing import Any
 
 import numpy as np
@@ -50,7 +50,41 @@ def evaluate(
     record = from_json(inputs)
     values = _values(readings, record.unit)
     half_width = _half_width_function(record, datasheet)
-    return _Evaluation(record, values, half_width).run()
+    measurement = _Evaluation(record, values, half_width).run()
+    for unit in record.conversions:
+        measurement = convert_measurement(measurement, unit)
+    return measurement
+
+
+def convert_measurement(m: Measurement, unit: str) -> Measurement:
+    """A Measurement in another unit. Each contribution is scaled by |dx'/dx| at the value.
+
+    `inputs` stays as it is. Measurement.to records the conversion.
+    """
+    try:
+        value, c = units.convert(m.value, m.unit, unit)
+    except ValueError as err:
+        raise UsageError(str(err)) from None
+    scale = abs(c)
+    issues = m.issues
+    if units.is_logarithmic(m.unit) != units.is_logarithmic(unit):
+        # TODO: check this (D23). First-order conversion between dB and linear units.
+        issues = (
+            *issues,
+            Issue.of(
+                "linearised",
+                f"Converted from {m.unit} to {unit} to first order at the value. "
+                f"The interval ± U is symmetric in {unit}, the exact one is not.",
+            ),
+        )
+    return replace(
+        m,
+        value=value,
+        unit=unit,
+        u=m.u * scale,
+        budget=tuple(replace(c_, u=c_.u * scale) for c_ in m.budget),
+        issues=issues,
+    )
 
 
 def recompute(
@@ -87,7 +121,7 @@ def _resolve_custom(inputs: Mapping[str, Any]) -> Datasheet:
 def _values(readings: Quantity, unit: str) -> list[float]:
     if not units.is_quantity(readings):
         raise UsageError(f"readings must be a quantity with a unit of {unit}")
-    if not units.same_dimension(readings, unit):
+    if not units.same_dimension(readings, unit) or units.is_decibel(readings):
         raise UsageError(f"readings must have the dimension of {unit}, got {readings.units}")
     array = np.atleast_1d(np.asarray(readings.to(unit).magnitude, dtype=float)).ravel()
     if array.size == 0:

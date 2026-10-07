@@ -3,6 +3,7 @@
 The data sheet here is fictional and exists only for this test.
 """
 
+import math
 from datetime import UTC, date, datetime
 
 import gumeasure as gm
@@ -53,3 +54,55 @@ def test_level_overrange_is_above_full_scale():
     high = inst.evaluate("level", make([25.0], "dBm"), at=AT, temperature="23 °C")
     assert "overrange" not in [i.code for i in low.issues]
     assert "overrange" in [i.code for i in high.issues]
+
+
+def test_convert_log_linear_log():
+    import json
+
+    inst = gm.Instrument(LEVEL_DS, "S1", (CAL,), modes={})
+    readings = make([-30.0, -30.2], "dBm")
+    m = inst.evaluate("level", readings, at=AT, temperature="23 °C")
+    mw = m.to("mW")
+    assert abs(mw.value - 10 ** (-30.1 / 10)) < 1e-15
+    assert abs(mw.u - mw.value * math.log(10) / 10 * m.u) < 1e-18
+    assert [i.code for i in mw.issues] == ["linearised"]
+    back = mw.to("dBm")
+    assert abs(back.value - m.value) < 1e-12 and abs(back.u - m.u) < 1e-12
+    record = json.loads(json.dumps(back.to_dict()))
+    assert gm.recompute(record, readings) == back
+    assert m.to("dBW").value == m.value - 30
+
+
+def test_linear_readings_for_a_dbm_function_and_unit_argument():
+    inst = gm.Instrument(LEVEL_DS, "S1", (CAL,), modes={})
+    m = inst.evaluate("level", make([1.0, 1.0], "uW"), at=AT, unit="mW")
+    assert abs(m.value - 1e-3) < 1e-15
+    assert m.inputs["conversions"] == ["mW"]
+
+
+def test_voltage_log_units():
+    from gumeasure.units import convert, q
+
+    assert abs(convert(0.0, "dBV", "dBµV")[0] - 120.0) < 1e-9
+    assert abs(q("3 dBuV").to("dBV").magnitude + 117.0) < 1e-9
+
+
+def test_log_functions_refuse_fractions():
+    import dataclasses
+
+    import pytest
+
+    rng = LEVEL_DS.functions["level"].ranges[0]
+    bad = dataclasses.replace(rng, accuracy=(gm.Accuracy(of_reading=0.01),))
+    with pytest.raises(gm.ModelError, match="offset in dB"):
+        dataclasses.replace(LEVEL_DS, functions={"level": gm.Function("dBm", (bad,))})
+
+
+def test_cannot_convert_negative_to_log():
+    import pytest
+
+    from tests.test_examples import spd
+
+    m = spd().evaluate("readback.current", make([-0.01], "A"), at=AT)
+    with pytest.raises(gm.UsageError):
+        m.to("dBm")

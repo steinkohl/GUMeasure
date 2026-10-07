@@ -106,6 +106,7 @@ class Inputs:
     datasheet: DatasheetRecord
     calibration: CalibrationRecord | None
     previous: CalibrationRecord | None
+    conversions: tuple[str, ...] = ()
 
 
 ADAPTER: TypeAdapter[Inputs] = TypeAdapter(Inputs)
@@ -139,6 +140,7 @@ def build(
     range_: Range,
     at: datetime,
     temperature: Quantity | None,
+    conversions: tuple[str, ...] = (),
 ) -> dict[str, Any]:
     """Snapshot for one evaluation, built from the domain objects."""
     ds = instrument.datasheet
@@ -174,6 +176,7 @@ def build(
         ),
         calibration=_calibration(current, function, range_, unit),
         previous=_calibration(previous, function, range_, unit) if drift == "history" else None,
+        conversions=conversions,
     )
     return to_json(record)
 
