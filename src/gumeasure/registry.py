@@ -23,7 +23,18 @@ from gumeasure.model import Calibration, Datasheet, Instrument, Origin
 
 GROUP = "gumeasure.datasheets"
 PREFIX = "gumeasure:"
-BUILTIN = ("gumeasure:example.EXAMPLE_DMM", "gumeasure:siglent.SPD1305X")
+BUILTIN = (
+    "gumeasure:example.EXAMPLE_DMM",
+    "gumeasure:korad.KC3405",
+    "gumeasure:siglent.SDG6022X",
+    "gumeasure:siglent.SDG6032X",
+    "gumeasure:siglent.SDG6052X",
+    "gumeasure:siglent.SDL1020X",
+    "gumeasure:siglent.SDM3065X",
+    "gumeasure:siglent.SDM3065X_SC",
+    "gumeasure:siglent.SPD1305X",
+    "gumeasure:siglent.SSA3032X_R",
+)
 _BUILTIN_NAME = re.compile(r"gumeasure:(?P<module>[a-z_][a-z0-9_]*)\.(?P<object>[A-Za-z_]\w*)")
 
 

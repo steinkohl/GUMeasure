@@ -124,10 +124,31 @@
           "title": "Full Scale",
           "type": "string"
         },
+        "max_reading": {
+          "anyOf": [
+            {
+              "description": "number and unit, such as '10 mA'",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Max Reading"
+        },
         "resolution": {
-          "description": "number and unit, such as '10 mA'",
-          "title": "Resolution",
-          "type": "string"
+          "anyOf": [
+            {
+              "description": "number and unit, such as '10 mA'",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Resolution"
         },
         "resolution_included": {
           "title": "Resolution Included",
@@ -147,7 +168,6 @@
       },
       "required": [
         "full_scale",
-        "resolution",
         "resolution_included",
         "accuracy"
       ],
@@ -199,9 +219,17 @@
       "type": "string"
     },
     "tcal": {
-      "description": "number and unit, such as '10 mA'",
-      "title": "Tcal",
-      "type": "string"
+      "anyOf": [
+        {
+          "description": "number and unit, such as '10 mA'",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Tcal"
     },
     "vendor": {
       "title": "Vendor",
@@ -213,7 +241,6 @@
     "model",
     "vendor",
     "source",
-    "tcal",
     "band",
     "function"
   ],

@@ -661,6 +661,7 @@ Every item below marked `#todo: check this` was chosen without the owner. Code t
 | D21 | Reference temperature in mode B | `tcal` and `band` of the data sheet, as in mode A. The certificate temperature is recorded in the snapshot but not used. | The temperature coefficient of the data sheet is stated relative to `tcal`. | `#todo: check this` |
 | D22 | Temperature outside the band and no `tempco` in the data sheet | New issue `tempco-unknown`, severity error. The accuracy of the data sheet does not hold there. | The issue table of the brief has no code for this case. | `#todo: check this` |
 | D23 | Conversion between dB and linear units | First order: each contribution times the sensitivity coefficient at the value. Note `linearised`. Conversions are listed in `inputs.conversions` and applied by `evaluate` in order. | GUM law of propagation. The exact interval is asymmetric in the other unit. | `#todo: check this` |
+| D24 | Data sheet that refers to TCAL without a number | `tcal` left out. The temperature of the certificate in force is used. Without one, the note `temperature-assumed`. | Siglent DMMs state accuracy at TCAL ±5 °C. | `#todo: check this` |
 
 ---
 

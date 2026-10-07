@@ -129,7 +129,16 @@ group `gumeasure.datasheets`.
 | Name | Instrument | State |
 |---|---|---|
 | `gumeasure:example.EXAMPLE_DMM` | fictional DMM | for the tests and documentation |
-| `gumeasure:siglent.SPD1305X` | Siglent SPD1305X power supply | values to be checked against the data sheet before the first release |
+| `gumeasure:korad.KC3405` | Korad KC3405 power supply, setup accuracy | typed from the user manual |
+| `gumeasure:siglent.SDG6022X`, `SDG6032X`, `SDG6052X` | Siglent SDG6000X generators: frequency, DC, amplitude at 10 kHz | typed from Date Sheet-2018.04 |
+| `gumeasure:siglent.SDL1020X` | Siglent SDL1020X electronic load: readback and settings | typed from DataSheet-2019.10 |
+| `gumeasure:siglent.SDM3065X`, `SDM3065X_SC` | Siglent SDM3065X DMM: DCV, DCI, resistance, ACV, ACI, frequency, capacitance | typed from DataSheet-2021.05 |
+| `gumeasure:siglent.SPD1305X` | Siglent SPD1305X power supply | values from agnostibench |
+| `gumeasure:siglent.SSA3032X_R` | Siglent SSA3032X-R spectrum analyser: total level accuracy | typed from DS0703R_E02F |
+
+Every value typed from a document must be checked against it before a release. Functions
+measured in several frequency bands, such as AC voltage, have one function per band, such as
+`acv.10Hz-20kHz`. Functions named `setting.*` or `output.*` give the accuracy of a set value.
 
 ## Architecture
 

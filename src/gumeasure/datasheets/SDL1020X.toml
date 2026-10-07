@@ -1,0 +1,115 @@
+#:schema ../schema/datasheet.schema.json
+# Typed from the Siglent data sheet "SDL1000X Programmable DC Electronic Load",
+# DataSheet-2019.10, table Specifications, column SDL1020X. Check every value against the
+# document before a release.
+schema = "gumeasure.datasheet/1"
+model  = "SDL1020X"
+vendor = "Siglent Technologies"
+source = "Siglent SDL1000X Programmable DC Electronic Load data sheet, DataSheet-2019.10, table Specifications, column SDL1020X. Valid at 25 °C ± 5 °C after 30 minutes warm-up. Temperature coefficients taken as ppm of reading per °C. Values typed from the PDF, to be checked against it before a release"
+tcal   = "25 °C"
+band   = "5 K"
+# no intervals: one accuracy column, valid until the calibration is due
+
+[function."readback.voltage"]
+unit = "V"
+
+[[function."readback.voltage".range]]
+full_scale          = "36 V"
+resolution          = "0.1 mV"
+resolution_included = false   # TODO: check this (D7)
+accuracy            = [{ of_reading = "0.025 %", of_range = "0.025 %" }]
+tempco              = { of_reading = "20 ppm" }   # TODO: check this. "20 ppm/℃", of reading assumed
+
+[[function."readback.voltage".range]]
+full_scale          = "150 V"
+resolution          = "1 mV"
+resolution_included = false   # TODO: check this (D7)
+accuracy            = [{ of_reading = "0.025 %", of_range = "0.025 %" }]
+tempco              = { of_reading = "20 ppm" }
+
+[function."readback.current"]
+unit = "A"
+
+[[function."readback.current".range]]
+full_scale          = "5 A"
+resolution          = "0.1 mA"
+resolution_included = false   # TODO: check this (D7)
+accuracy            = [{ of_reading = "0.05 %", of_range = "0.05 %" }]
+tempco              = { of_reading = "50 ppm" }
+
+[[function."readback.current".range]]
+full_scale          = "30 A"
+resolution          = "0.1 mA"
+resolution_included = false
+accuracy            = [{ of_reading = "0.05 %", of_range = "0.05 %" }]
+tempco              = { of_reading = "50 ppm" }
+
+[function."readback.power"]
+unit = "W"
+
+[[function."readback.power".range]]
+full_scale          = "200 W"
+resolution          = "10 mW"
+resolution_included = false
+accuracy            = [{ of_reading = "0.1 %", of_range = "0.1 %" }]
+# no temperature coefficient stated
+
+# Settings: the value is the set value, the accuracy that of the load.
+[function."setting.voltage"]   # CV mode
+unit = "V"
+
+[[function."setting.voltage".range]]
+full_scale          = "36 V"
+resolution          = "1 mV"
+resolution_included = true   # the set value is exact
+accuracy            = [{ of_reading = "0.05 %", of_range = "0.025 %" }]
+tempco              = { of_reading = "50 ppm" }
+
+[[function."setting.voltage".range]]
+full_scale          = "150 V"
+resolution          = "1 mV"
+resolution_included = true
+accuracy            = [{ of_reading = "0.05 %", of_range = "0.025 %" }]
+tempco              = { of_reading = "50 ppm" }
+
+[function."setting.current"]   # CC mode
+unit = "A"
+
+[[function."setting.current".range]]
+full_scale          = "5 A"
+resolution          = "1 mA"
+resolution_included = true
+accuracy            = [{ of_reading = "0.05 %", of_range = "0.05 %" }]
+tempco              = { of_reading = "100 ppm" }
+
+[[function."setting.current".range]]
+full_scale          = "30 A"
+resolution          = "1 mA"
+resolution_included = true
+accuracy            = [{ of_reading = "0.05 %", of_range = "0.05 %" }]
+tempco              = { of_reading = "100 ppm" }
+
+# Worked examples, computed by hand from the values above.
+[[check]]   # 0.025 % × 12 V + 0.025 % × 36 V
+function   = "readback.voltage"
+range      = "36 V"
+reading    = "12 V"
+half_width = "12 mV"
+
+[[check]]   # 0.05 % × 2 A + 0.05 % × 5 A
+function   = "readback.current"
+range      = "5 A"
+reading    = "2 A"
+half_width = "3.5 mA"
+
+[[check]]   # 0.1 % × 100 W + 0.1 % × 200 W
+function   = "readback.power"
+range      = "200 W"
+reading    = "100 W"
+half_width = "0.3 W"
+
+[[check]]   # 0.05 % × 10 A + 0.05 % × 30 A
+function   = "setting.current"
+range      = "30 A"
+reading    = "10 A"
+half_width = "20 mA"

@@ -23,7 +23,7 @@ dB. `of_reading` and `of_range` must be zero there.
 | `model` | string | instrument type, such as `"SPD1305X"` |
 | `vendor` | string | |
 | `source` | string | document, revision and table the values come from |
-| `tcal` | temperature | calibration temperature, such as `"23 °C"` |
+| `tcal` | temperature, optional | calibration temperature, such as `"23 °C"`. Leave it out where the data sheet says "TCAL": the temperature of the certificate in force is used |
 | `band` | temperature difference in K | the accuracy holds within `tcal ± band` |
 | `intervals` | list of times, optional | time since calibration that each accuracy column holds for, rising. Empty or missing: one column, valid until the calibration is due |
 | `function.<name>` | table | one per measured quantity |
@@ -43,8 +43,9 @@ A function name with a dot needs quotes: `[function."readback.current"]`.
 | Key | Type | Meaning |
 |---|---|---|
 | `full_scale` | quantity in the unit of the function | identifies the range |
-| `resolution` | quantity in the unit of the function | one digit |
+| `resolution` | quantity in the unit of the function, optional | one digit. Required unless `resolution_included` is true |
 | `resolution_included` | boolean | true if the accuracy already covers the resolution |
+| `max_reading` | quantity, optional | largest reading the specification covers, such as 10 % over range. Default: the full scale |
 | `accuracy` | list of accuracy tables | one per interval, in the order of `intervals`. Exactly one without intervals |
 | `tempco` | accuracy table, optional | per kelvin outside `tcal ± band` |
 

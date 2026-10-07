@@ -105,28 +105,48 @@ class Accuracy:
         offset = 0.0 if self.offset is None else units.magnitude(self.offset, unit)
         return self.of_reading, self.of_range, offset, self.counts
 
-    def half_width(self, x: Quantity, full_scale: Quantity, resolution: Quantity) -> Quantity:
+    def half_width(
+        self, x: Quantity, full_scale: Quantity, resolution: Quantity | None
+    ) -> Quantity:
         """Half-width at the reading x, in the unit of the full scale."""
         unit = str(full_scale.units)
         value = linear_half_width(
             *self.values(unit),
             units.magnitude(x, unit),
             units.magnitude(full_scale, unit),
-            units.magnitude(resolution, unit),
+            0.0 if resolution is None else units.magnitude(resolution, unit),
         )
         return units.make(value, unit)
 
 
 @dataclass(frozen=True)
 class Range:
+    """A measurement range.
+
+    `resolution` may be None where the data sheet states none. The accuracy must then cover
+    it. `max_reading` is the largest |reading| the specification covers, such as 10 % over
+    range. Without it, the full scale is the limit.
+    """
+
     full_scale: Quantity
-    resolution: Quantity
+    resolution: Quantity | None
     resolution_included: bool
     accuracy: tuple[Accuracy, ...]
     tempco: Accuracy | None = None
+    max_reading: Quantity | None = None
 
     def __post_init__(self) -> None:
         object.__setattr__(self, "accuracy", tuple(self.accuracy))
+
+    def resolution_in(self, unit: str) -> float:
+        """The resolution as a float, zero where the data sheet states none."""
+        return 0.0 if self.resolution is None else units.magnitude(self.resolution, unit)
+
+    def limit_in(self, unit: str) -> float:
+        """The largest reading the specification covers."""
+        return units.magnitude(
+            self.full_scale if self.max_reading is None else self.max_reading, unit
+        )
 
 
 @dataclass(frozen=True)
@@ -154,7 +174,7 @@ class Datasheet:
     model: str
     vendor: str
     source: str
-    tcal: Quantity
+    tcal: Quantity | None
     band: Quantity
     intervals: tuple[Quantity, ...]
     functions: Mapping[str, Function]
@@ -181,7 +201,7 @@ class Datasheet:
             *range_.accuracy[interval_index].values(unit),
             units.magnitude(reading, unit),
             units.magnitude(range_.full_scale, unit),
-            units.magnitude(range_.resolution, unit),
+            range_.resolution_in(unit),
         )
         return units.make(value, unit)
 
@@ -242,7 +262,7 @@ class Datasheet:
             *range_.tempco.values(unit),
             units.magnitude(reading, unit),
             units.magnitude(range_.full_scale, unit),
-            units.magnitude(range_.resolution, unit),
+            range_.resolution_in(unit),
         )
         return units.make(value, unit)
 
@@ -261,10 +281,9 @@ def validate_datasheet(ds: Datasheet) -> list[tuple[str, str]]:
             problems.append((key, message))
         return ok
 
-    if need(units.is_quantity(ds.tcal), "tcal", "must be a quantity") and need(
-        units.same_dimension(ds.tcal, "kelvin"), "tcal", "must be a temperature"
-    ):
-        pass
+    # tcal None: the temperature of the certificate in force, as for "TCAL" in many data sheets.
+    if ds.tcal is not None and need(units.is_quantity(ds.tcal), "tcal", "must be a quantity"):
+        need(units.same_dimension(ds.tcal, "kelvin"), "tcal", "must be a temperature")
     if (
         need(units.is_quantity(ds.band), "band", "must be a quantity")
         and need(units.same_dimension(ds.band, "kelvin"), "band", "must be a temperature")
@@ -299,11 +318,25 @@ def validate_datasheet(ds: Datasheet) -> list[tuple[str, str]]:
                     need(fs > 0, f"{rkey}.full_scale", "must be positive")
                 need(fs > last, f"{rkey}.full_scale", "ranges must be sorted by full scale")
                 last = fs
-            if _dimension(problems, range_.resolution, fn.unit, f"{rkey}.resolution"):
+            if range_.resolution is None:
+                need(
+                    range_.resolution_included,
+                    f"{rkey}.resolution",
+                    "needed unless resolution_included is true",
+                )
+            elif _dimension(problems, range_.resolution, fn.unit, f"{rkey}.resolution"):
                 need(
                     units.magnitude(range_.resolution, fn.unit) > 0,
                     f"{rkey}.resolution",
                     "must be positive",
+                )
+            if range_.max_reading is not None and _dimension(
+                problems, range_.max_reading, fn.unit, f"{rkey}.max_reading"
+            ):
+                need(
+                    range_.limit_in(fn.unit) >= units.magnitude(range_.full_scale, fn.unit),
+                    f"{rkey}.max_reading",
+                    "must not be below the full scale",
                 )
             need(
                 len(range_.accuracy) == columns,

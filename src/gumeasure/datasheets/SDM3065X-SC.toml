@@ -1,0 +1,795 @@
+#:schema ../schema/datasheet.schema.json
+# Typed from the Siglent data sheet "SDM3065X Series Digital Multimeter", DataSheet-2021.05.
+# Check every value against the document before a release.
+schema = "gumeasure.datasheet/1"
+model  = "SDM3065X-SC"
+vendor = "Siglent Technologies"
+source = "Siglent SDM3065X Series Digital Multimeter data sheet, DataSheet-2021.05, tables DC Characteristics, AC Characteristics, Frequency and Period Characteristics and Capacitance Characteristic. 24 h column at TCAL ±1 °C, 90 d and 1 year at TCAL ±5 °C. DC for 90-minute warm-up and 100 NPLC, add the RMS noise adder below 100 NPLC. 2-wire resistance needs REL or 0.2 Ω more. DCV above ±500 V adds 0.03 mV per volt. AC for sine waves above 5 % of range and the slow filter. Frequency for 1 s gate time. Capacitance with REL. Values typed from the PDF, to be checked against it before a release"
+# TCAL is the calibration temperature of the certificate. The data sheet gives no number.
+band      = "5 K"   # TODO: check this. The 24 h column holds at TCAL ±1 °C only.
+intervals = ["24 h", "90 d", "1 year"]
+
+[function."dcv"]
+unit = "V"
+
+[[function."dcv".range]]
+full_scale = "200 mV"
+resolution = "0.1 µV"
+resolution_included = true  # TODO: check this
+max_reading = "220 mV"   # 10 % over range
+accuracy = [{ of_reading = "0.002 %", of_range = "0.0015 %" }, { of_reading = "0.003 %", of_range = "0.002 %" }, { of_reading = "0.004 %", of_range = "0.0023 %" }]
+tempco = { of_reading = "0.0005 %", of_range = "0.0003 %" }
+
+[[function."dcv".range]]
+full_scale = "2 V"
+resolution = "1 µV"
+resolution_included = true  # TODO: check this
+max_reading = "2.2 V"   # 10 % over range
+accuracy = [{ of_reading = "0.0015 %", of_range = "0.0004 %" }, { of_reading = "0.002 %", of_range = "0.0004 %" }, { of_reading = "0.0035 %", of_range = "0.0006 %" }]
+tempco = { of_reading = "0.0005 %", of_range = "0.0001 %" }
+
+[[function."dcv".range]]
+full_scale = "20 V"
+resolution = "10 µV"
+resolution_included = true  # TODO: check this
+max_reading = "22 V"   # 10 % over range
+accuracy = [{ of_reading = "0.002 %", of_range = "0.0003 %" }, { of_reading = "0.003 %", of_range = "0.0004 %" }, { of_reading = "0.004 %", of_range = "0.0004 %" }]
+tempco = { of_reading = "0.0005 %", of_range = "0.0001 %" }
+
+[[function."dcv".range]]
+full_scale = "200 V"
+resolution = "100 µV"
+resolution_included = true  # TODO: check this
+max_reading = "220 V"   # 10 % over range
+accuracy = [{ of_reading = "0.002 %", of_range = "0.0005 %" }, { of_reading = "0.004 %", of_range = "0.0004 %" }, { of_reading = "0.005 %", of_range = "0.0005 %" }]
+tempco = { of_reading = "0.0005 %", of_range = "0.0001 %" }
+
+[[function."dcv".range]]
+full_scale = "1000 V"
+resolution = "1 mV"
+resolution_included = true  # TODO: check this
+accuracy = [{ of_reading = "0.002 %", of_range = "0.0005 %" }, { of_reading = "0.004 %", of_range = "0.0008 %" }, { of_reading = "0.0055 %", of_range = "0.0008 %" }]
+tempco = { of_reading = "0.0005 %", of_range = "0.0001 %" }
+
+[function."dci"]
+unit = "A"
+
+[[function."dci".range]]
+full_scale = "200 µA"
+resolution = "0.1 nA"
+resolution_included = true  # TODO: check this
+max_reading = "220 µA"   # 10 % over range
+accuracy = [{ of_reading = "0.009 %", of_range = "0.01 %" }, { of_reading = "0.04 %", of_range = "0.005 %" }, { of_reading = "0.05 %", of_range = "0.005 %" }]
+tempco = { of_reading = "0.002 %", of_range = "0.0026 %" }
+
+[[function."dci".range]]
+full_scale = "2 mA"
+resolution = "1 nA"
+resolution_included = true  # TODO: check this
+max_reading = "2.2 mA"   # 10 % over range
+accuracy = [{ of_reading = "0.007 %", of_range = "0.001 %" }, { of_reading = "0.03 %", of_range = "0.001 %" }, { of_reading = "0.05 %", of_range = "0.002 %" }]
+tempco = { of_reading = "0.002 %", of_range = "0.0001 %" }
+
+[[function."dci".range]]
+full_scale = "20 mA"
+resolution = "10 nA"
+resolution_included = true  # TODO: check this
+max_reading = "22 mA"   # 10 % over range
+accuracy = [{ of_reading = "0.006 %", of_range = "0.008 %" }, { of_reading = "0.03 %", of_range = "0.005 %" }, { of_reading = "0.05 %", of_range = "0.005 %" }]
+tempco = { of_reading = "0.002 %", of_range = "0.0015 %" }
+
+[[function."dci".range]]
+full_scale = "200 mA"
+resolution = "100 nA"
+resolution_included = true  # TODO: check this
+max_reading = "220 mA"   # 10 % over range
+accuracy = [{ of_reading = "0.009 %", of_range = "0.001 %" }, { of_reading = "0.03 %", of_range = "0.001 %" }, { of_reading = "0.05 %", of_range = "0.002 %" }]
+tempco = { of_reading = "0.002 %", of_range = "0.0001 %" }
+
+[[function."dci".range]]
+full_scale = "2 A"
+resolution = "1 µA"
+resolution_included = true  # TODO: check this
+max_reading = "2.2 A"   # 10 % over range
+accuracy = [{ of_reading = "0.045 %", of_range = "0.015 %" }, { of_reading = "0.08 %", of_range = "0.005 %" }, { of_reading = "0.1 %", of_range = "0.012 %" }]
+tempco = { of_reading = "0.005 %", of_range = "0.0008 %" }
+
+[[function."dci".range]]
+full_scale = "10 A"
+resolution = "10 µA"
+resolution_included = true  # TODO: check this
+accuracy = [{ of_reading = "0.09 %", of_range = "0.002 %" }, { of_reading = "0.12 %", of_range = "0.005 %" }, { of_reading = "0.15 %", of_range = "0.005 %" }]
+tempco = { of_reading = "0.005 %", of_range = "0.0018 %" }
+
+# 4-wire, or 2-wire with REL
+[function."resistance"]
+unit = "Ω"
+
+[[function."resistance".range]]
+full_scale = "200 Ω"
+resolution = "0.1 mΩ"
+resolution_included = true  # TODO: check this
+max_reading = "220 Ω"   # 10 % over range
+accuracy = [{ of_reading = "0.003 %", of_range = "0.0031 %" }, { of_reading = "0.008 %", of_range = "0.005 %" }, { of_reading = "0.01 %", of_range = "0.004 %" }]
+tempco = { of_reading = "0.0006 %", of_range = "0.0006 %" }
+
+[[function."resistance".range]]
+full_scale = "2 kΩ"
+resolution = "1 mΩ"
+resolution_included = true  # TODO: check this
+max_reading = "2.2 kΩ"   # 10 % over range
+accuracy = [{ of_reading = "0.002 %", of_range = "0.0005 %" }, { of_reading = "0.008 %", of_range = "0.001 %" }, { of_reading = "0.01 %", of_range = "0.001 %" }]
+tempco = { of_reading = "0.0006 %", of_range = "0.0001 %" }
+
+[[function."resistance".range]]
+full_scale = "20 kΩ"
+resolution = "10 mΩ"
+resolution_included = true  # TODO: check this
+max_reading = "22 kΩ"   # 10 % over range
+accuracy = [{ of_reading = "0.002 %", of_range = "0.0005 %" }, { of_reading = "0.008 %", of_range = "0.001 %" }, { of_reading = "0.01 %", of_range = "0.001 %" }]
+tempco = { of_reading = "0.0006 %", of_range = "0.0001 %" }
+
+[[function."resistance".range]]
+full_scale = "200 kΩ"
+resolution = "100 mΩ"
+resolution_included = true  # TODO: check this
+max_reading = "220 kΩ"   # 10 % over range
+accuracy = [{ of_reading = "0.002 %", of_range = "0.0005 %" }, { of_reading = "0.008 %", of_range = "0.001 %" }, { of_reading = "0.01 %", of_range = "0.001 %" }]
+tempco = { of_reading = "0.0006 %", of_range = "0.0001 %" }
+
+[[function."resistance".range]]
+full_scale = "1 MΩ"
+resolution = "1 Ω"
+resolution_included = true  # TODO: check this
+max_reading = "1.1 MΩ"   # 10 % over range
+accuracy = [{ of_reading = "0.002 %", of_range = "0.001 %" }, { of_reading = "0.01 %", of_range = "0.001 %" }, { of_reading = "0.012 %", of_range = "0.001 %" }]
+tempco = { of_reading = "0.001 %", of_range = "0.0002 %" }
+
+[[function."resistance".range]]
+full_scale = "10 MΩ"
+resolution = "10 Ω"
+resolution_included = true  # TODO: check this
+max_reading = "11 MΩ"   # 10 % over range
+accuracy = [{ of_reading = "0.015 %", of_range = "0.001 %" }, { of_reading = "0.03 %", of_range = "0.001 %" }, { of_reading = "0.04 %", of_range = "0.001 %" }]
+tempco = { of_reading = "0.003 %", of_range = "0.0005 %" }
+
+[[function."resistance".range]]
+full_scale = "100 MΩ"
+resolution = "100 Ω"
+resolution_included = true  # TODO: check this
+max_reading = "110 MΩ"   # 10 % over range
+accuracy = [{ of_reading = "0.3 %", of_range = "0.01 %" }, { of_reading = "0.8 %", of_range = "0.01 %" }, { of_reading = "0.8 %", of_range = "0.01 %" }]
+tempco = { of_reading = "0.15 %", of_range = "0.0002 %" }
+
+# true RMS AC voltage, 3Hz-5Hz
+[function."acv.3Hz-5Hz"]
+unit = "V"
+
+[[function."acv.3Hz-5Hz".range]]
+full_scale = "200 mV"
+resolution = "0.1 µV"
+resolution_included = true  # TODO: check this
+max_reading = "220 mV"   # 10 % over range
+accuracy = [{ of_reading = "1 %", of_range = "0.03 %" }, { of_reading = "1 %", of_range = "0.04 %" }, { of_reading = "1 %", of_range = "0.04 %" }]
+tempco = { of_reading = "0.1 %", of_range = "0.004 %" }
+
+[[function."acv.3Hz-5Hz".range]]
+full_scale = "2 V"
+resolution = "1 µV"
+resolution_included = true  # TODO: check this
+max_reading = "2.2 V"   # 10 % over range
+accuracy = [{ of_reading = "1 %", of_range = "0.02 %" }, { of_reading = "1 %", of_range = "0.03 %" }, { of_reading = "1 %", of_range = "0.03 %" }]
+tempco = { of_reading = "0.1 %", of_range = "0.003 %" }
+
+[[function."acv.3Hz-5Hz".range]]
+full_scale = "20 V"
+resolution = "10 µV"
+resolution_included = true  # TODO: check this
+max_reading = "22 V"   # 10 % over range
+accuracy = [{ of_reading = "1 %", of_range = "0.03 %" }, { of_reading = "1 %", of_range = "0.04 %" }, { of_reading = "1 %", of_range = "0.04 %" }]
+tempco = { of_reading = "0.1 %", of_range = "0.004 %" }
+
+[[function."acv.3Hz-5Hz".range]]
+full_scale = "200 V"
+resolution = "100 µV"
+resolution_included = true  # TODO: check this
+max_reading = "220 V"   # 10 % over range
+accuracy = [{ of_reading = "1 %", of_range = "0.02 %" }, { of_reading = "1 %", of_range = "0.03 %" }, { of_reading = "1 %", of_range = "0.03 %" }]
+tempco = { of_reading = "0.1 %", of_range = "0.003 %" }
+
+[[function."acv.3Hz-5Hz".range]]
+full_scale = "750 V"
+resolution = "100 µV"
+resolution_included = true  # TODO: check this
+accuracy = [{ of_reading = "1 %", of_range = "0.02 %" }, { of_reading = "1 %", of_range = "0.03 %" }, { of_reading = "1 %", of_range = "0.03 %" }]
+tempco = { of_reading = "0.1 %", of_range = "0.003 %" }
+
+# true RMS AC voltage, 5Hz-10Hz
+[function."acv.5Hz-10Hz"]
+unit = "V"
+
+[[function."acv.5Hz-10Hz".range]]
+full_scale = "200 mV"
+resolution = "0.1 µV"
+resolution_included = true  # TODO: check this
+max_reading = "220 mV"   # 10 % over range
+accuracy = [{ of_reading = "0.35 %", of_range = "0.03 %" }, { of_reading = "0.35 %", of_range = "0.04 %" }, { of_reading = "0.35 %", of_range = "0.04 %" }]
+tempco = { of_reading = "0.035 %", of_range = "0.005 %" }
+
+[[function."acv.5Hz-10Hz".range]]
+full_scale = "2 V"
+resolution = "1 µV"
+resolution_included = true  # TODO: check this
+max_reading = "2.2 V"   # 10 % over range
+accuracy = [{ of_reading = "0.35 %", of_range = "0.02 %" }, { of_reading = "0.35 %", of_range = "0.03 %" }, { of_reading = "0.35 %", of_range = "0.03 %" }]
+tempco = { of_reading = "0.035 %", of_range = "0.003 %" }
+
+[[function."acv.5Hz-10Hz".range]]
+full_scale = "20 V"
+resolution = "10 µV"
+resolution_included = true  # TODO: check this
+max_reading = "22 V"   # 10 % over range
+accuracy = [{ of_reading = "0.35 %", of_range = "0.03 %" }, { of_reading = "0.35 %", of_range = "0.04 %" }, { of_reading = "0.35 %", of_range = "0.04 %" }]
+tempco = { of_reading = "0.035 %", of_range = "0.004 %" }
+
+[[function."acv.5Hz-10Hz".range]]
+full_scale = "200 V"
+resolution = "100 µV"
+resolution_included = true  # TODO: check this
+max_reading = "220 V"   # 10 % over range
+accuracy = [{ of_reading = "0.35 %", of_range = "0.02 %" }, { of_reading = "0.35 %", of_range = "0.03 %" }, { of_reading = "0.35 %", of_range = "0.03 %" }]
+tempco = { of_reading = "0.035 %", of_range = "0.003 %" }
+
+[[function."acv.5Hz-10Hz".range]]
+full_scale = "750 V"
+resolution = "100 µV"
+resolution_included = true  # TODO: check this
+accuracy = [{ of_reading = "0.35 %", of_range = "0.02 %" }, { of_reading = "0.35 %", of_range = "0.03 %" }, { of_reading = "0.35 %", of_range = "0.03 %" }]
+tempco = { of_reading = "0.035 %", of_range = "0.003 %" }
+
+# true RMS AC voltage, 10Hz-20kHz
+[function."acv.10Hz-20kHz"]
+unit = "V"
+
+[[function."acv.10Hz-20kHz".range]]
+full_scale = "200 mV"
+resolution = "0.1 µV"
+resolution_included = true  # TODO: check this
+max_reading = "220 mV"   # 10 % over range
+accuracy = [{ of_reading = "0.04 %", of_range = "0.03 %" }, { of_reading = "0.05 %", of_range = "0.04 %" }, { of_reading = "0.06 %", of_range = "0.04 %" }]
+tempco = { of_reading = "0.005 %", of_range = "0.004 %" }
+
+[[function."acv.10Hz-20kHz".range]]
+full_scale = "2 V"
+resolution = "1 µV"
+resolution_included = true  # TODO: check this
+max_reading = "2.2 V"   # 10 % over range
+accuracy = [{ of_reading = "0.04 %", of_range = "0.02 %" }, { of_reading = "0.05 %", of_range = "0.03 %" }, { of_reading = "0.06 %", of_range = "0.03 %" }]
+tempco = { of_reading = "0.005 %", of_range = "0.003 %" }
+
+[[function."acv.10Hz-20kHz".range]]
+full_scale = "20 V"
+resolution = "10 µV"
+resolution_included = true  # TODO: check this
+max_reading = "22 V"   # 10 % over range
+accuracy = [{ of_reading = "0.04 %", of_range = "0.04 %" }, { of_reading = "0.07 %", of_range = "0.04 %" }, { of_reading = "0.08 %", of_range = "0.04 %" }]
+tempco = { of_reading = "0.008 %", of_range = "0.004 %" }
+
+[[function."acv.10Hz-20kHz".range]]
+full_scale = "200 V"
+resolution = "100 µV"
+resolution_included = true  # TODO: check this
+max_reading = "220 V"   # 10 % over range
+accuracy = [{ of_reading = "0.04 %", of_range = "0.02 %" }, { of_reading = "0.07 %", of_range = "0.03 %" }, { of_reading = "0.08 %", of_range = "0.03 %" }]
+tempco = { of_reading = "0.008 %", of_range = "0.003 %" }
+
+[[function."acv.10Hz-20kHz".range]]
+full_scale = "750 V"
+resolution = "100 µV"
+resolution_included = true  # TODO: check this
+accuracy = [{ of_reading = "0.04 %", of_range = "0.02 %" }, { of_reading = "0.07 %", of_range = "0.03 %" }, { of_reading = "0.08 %", of_range = "0.03 %" }]
+tempco = { of_reading = "0.008 %", of_range = "0.003 %" }
+
+# true RMS AC voltage, 20kHz-50kHz
+[function."acv.20kHz-50kHz"]
+unit = "V"
+
+[[function."acv.20kHz-50kHz".range]]
+full_scale = "200 mV"
+resolution = "0.1 µV"
+resolution_included = true  # TODO: check this
+max_reading = "220 mV"   # 10 % over range
+accuracy = [{ of_reading = "0.1 %", of_range = "0.05 %" }, { of_reading = "0.11 %", of_range = "0.05 %" }, { of_reading = "0.12 %", of_range = "0.05 %" }]
+tempco = { of_reading = "0.011 %", of_range = "0.005 %" }
+
+[[function."acv.20kHz-50kHz".range]]
+full_scale = "2 V"
+resolution = "1 µV"
+resolution_included = true  # TODO: check this
+max_reading = "2.2 V"   # 10 % over range
+accuracy = [{ of_reading = "0.1 %", of_range = "0.04 %" }, { of_reading = "0.11 %", of_range = "0.05 %" }, { of_reading = "0.12 %", of_range = "0.05 %" }]
+tempco = { of_reading = "0.011 %", of_range = "0.005 %" }
+
+[[function."acv.20kHz-50kHz".range]]
+full_scale = "20 V"
+resolution = "10 µV"
+resolution_included = true  # TODO: check this
+max_reading = "22 V"   # 10 % over range
+accuracy = [{ of_reading = "0.1 %", of_range = "0.05 %" }, { of_reading = "0.12 %", of_range = "0.05 %" }, { of_reading = "0.15 %", of_range = "0.05 %" }]
+tempco = { of_reading = "0.012 %", of_range = "0.005 %" }
+
+[[function."acv.20kHz-50kHz".range]]
+full_scale = "200 V"
+resolution = "100 µV"
+resolution_included = true  # TODO: check this
+max_reading = "220 V"   # 10 % over range
+accuracy = [{ of_reading = "0.1 %", of_range = "0.04 %" }, { of_reading = "0.12 %", of_range = "0.05 %" }, { of_reading = "0.15 %", of_range = "0.05 %" }]
+tempco = { of_reading = "0.012 %", of_range = "0.005 %" }
+
+[[function."acv.20kHz-50kHz".range]]
+full_scale = "750 V"
+resolution = "100 µV"
+resolution_included = true  # TODO: check this
+accuracy = [{ of_reading = "0.1 %", of_range = "0.04 %" }, { of_reading = "0.12 %", of_range = "0.05 %" }, { of_reading = "0.15 %", of_range = "0.05 %" }]
+tempco = { of_reading = "0.012 %", of_range = "0.005 %" }
+
+# true RMS AC voltage, 50kHz-100kHz
+[function."acv.50kHz-100kHz"]
+unit = "V"
+
+[[function."acv.50kHz-100kHz".range]]
+full_scale = "200 mV"
+resolution = "0.1 µV"
+resolution_included = true  # TODO: check this
+max_reading = "220 mV"   # 10 % over range
+accuracy = [{ of_reading = "0.55 %", of_range = "0.08 %" }, { of_reading = "0.6 %", of_range = "0.08 %" }, { of_reading = "0.6 %", of_range = "0.08 %" }]
+tempco = { of_reading = "0.06 %", of_range = "0.008 %" }
+
+[[function."acv.50kHz-100kHz".range]]
+full_scale = "2 V"
+resolution = "1 µV"
+resolution_included = true  # TODO: check this
+max_reading = "2.2 V"   # 10 % over range
+accuracy = [{ of_reading = "0.55 %", of_range = "0.08 %" }, { of_reading = "0.6 %", of_range = "0.08 %" }, { of_reading = "0.6 %", of_range = "0.08 %" }]
+tempco = { of_reading = "0.06 %", of_range = "0.008 %" }
+
+[[function."acv.50kHz-100kHz".range]]
+full_scale = "20 V"
+resolution = "10 µV"
+resolution_included = true  # TODO: check this
+max_reading = "22 V"   # 10 % over range
+accuracy = [{ of_reading = "0.55 %", of_range = "0.08 %" }, { of_reading = "0.6 %", of_range = "0.08 %" }, { of_reading = "0.6 %", of_range = "0.08 %" }]
+tempco = { of_reading = "0.06 %", of_range = "0.008 %" }
+
+[[function."acv.50kHz-100kHz".range]]
+full_scale = "200 V"
+resolution = "100 µV"
+resolution_included = true  # TODO: check this
+max_reading = "220 V"   # 10 % over range
+accuracy = [{ of_reading = "0.55 %", of_range = "0.08 %" }, { of_reading = "0.6 %", of_range = "0.08 %" }, { of_reading = "0.6 %", of_range = "0.08 %" }]
+tempco = { of_reading = "0.06 %", of_range = "0.008 %" }
+
+[[function."acv.50kHz-100kHz".range]]
+full_scale = "750 V"
+resolution = "100 µV"
+resolution_included = true  # TODO: check this
+accuracy = [{ of_reading = "0.55 %", of_range = "0.08 %" }, { of_reading = "0.6 %", of_range = "0.08 %" }, { of_reading = "0.6 %", of_range = "0.08 %" }]
+tempco = { of_reading = "0.06 %", of_range = "0.008 %" }
+
+# true RMS AC voltage, 100kHz-300kHz
+[function."acv.100kHz-300kHz"]
+unit = "V"
+
+[[function."acv.100kHz-300kHz".range]]
+full_scale = "200 mV"
+resolution = "0.1 µV"
+resolution_included = true  # TODO: check this
+max_reading = "220 mV"   # 10 % over range
+accuracy = [{ of_reading = "4 %", of_range = "0.5 %" }, { of_reading = "4 %", of_range = "0.5 %" }, { of_reading = "4 %", of_range = "0.5 %" }]
+tempco = { of_reading = "0.2 %", of_range = "0.02 %" }
+
+[[function."acv.100kHz-300kHz".range]]
+full_scale = "2 V"
+resolution = "1 µV"
+resolution_included = true  # TODO: check this
+max_reading = "2.2 V"   # 10 % over range
+accuracy = [{ of_reading = "4 %", of_range = "0.5 %" }, { of_reading = "4 %", of_range = "0.5 %" }, { of_reading = "4 %", of_range = "0.5 %" }]
+tempco = { of_reading = "0.2 %", of_range = "0.02 %" }
+
+[[function."acv.100kHz-300kHz".range]]
+full_scale = "20 V"
+resolution = "10 µV"
+resolution_included = true  # TODO: check this
+max_reading = "22 V"   # 10 % over range
+accuracy = [{ of_reading = "4 %", of_range = "0.5 %" }, { of_reading = "4 %", of_range = "0.5 %" }, { of_reading = "4 %", of_range = "0.5 %" }]
+tempco = { of_reading = "0.2 %", of_range = "0.02 %" }
+
+[[function."acv.100kHz-300kHz".range]]
+full_scale = "200 V"
+resolution = "100 µV"
+resolution_included = true  # TODO: check this
+max_reading = "220 V"   # 10 % over range
+accuracy = [{ of_reading = "4 %", of_range = "0.5 %" }, { of_reading = "4 %", of_range = "0.5 %" }, { of_reading = "4 %", of_range = "0.5 %" }]
+tempco = { of_reading = "0.2 %", of_range = "0.02 %" }
+
+[[function."acv.100kHz-300kHz".range]]
+full_scale = "750 V"
+resolution = "100 µV"
+resolution_included = true  # TODO: check this
+accuracy = [{ of_reading = "4 %", of_range = "0.5 %" }, { of_reading = "4 %", of_range = "0.5 %" }, { of_reading = "4 %", of_range = "0.5 %" }]
+tempco = { of_reading = "0.2 %", of_range = "0.02 %" }
+
+# true RMS AC current, 3Hz-5Hz. Typical only for 200 µA, 2 mA, 2 A and 10 A above 1 kHz
+[function."aci.3Hz-5Hz"]
+unit = "A"
+
+[[function."aci.3Hz-5Hz".range]]
+full_scale = "200 µA"
+resolution = "0.1 nA"
+resolution_included = true  # TODO: check this
+max_reading = "220 µA"   # 10 % over range
+accuracy = [{ of_reading = "1.1 %", of_range = "0.06 %" }, { of_reading = "1.1 %", of_range = "0.06 %" }, { of_reading = "1.1 %", of_range = "0.06 %" }]
+tempco = { of_reading = "0.2 %", of_range = "0.005 %" }
+
+[[function."aci.3Hz-5Hz".range]]
+full_scale = "2 mA"
+resolution = "1 nA"
+resolution_included = true  # TODO: check this
+max_reading = "2.2 mA"   # 10 % over range
+accuracy = [{ of_reading = "1 %", of_range = "0.04 %" }, { of_reading = "1 %", of_range = "0.04 %" }, { of_reading = "1 %", of_range = "0.04 %" }]
+tempco = { of_reading = "0.1 %", of_range = "0.005 %" }
+
+[[function."aci.3Hz-5Hz".range]]
+full_scale = "20 mA"
+resolution = "10 nA"
+resolution_included = true  # TODO: check this
+max_reading = "22 mA"   # 10 % over range
+accuracy = [{ of_reading = "1.1 %", of_range = "0.06 %" }, { of_reading = "1.1 %", of_range = "0.06 %" }, { of_reading = "1.1 %", of_range = "0.06 %" }]
+tempco = { of_reading = "0.2 %", of_range = "0.005 %" }
+
+[[function."aci.3Hz-5Hz".range]]
+full_scale = "200 mA"
+resolution = "100 nA"
+resolution_included = true  # TODO: check this
+max_reading = "220 mA"   # 10 % over range
+accuracy = [{ of_reading = "1 %", of_range = "0.04 %" }, { of_reading = "1 %", of_range = "0.04 %" }, { of_reading = "1 %", of_range = "0.04 %" }]
+tempco = { of_reading = "0.1 %", of_range = "0.006 %" }
+
+[[function."aci.3Hz-5Hz".range]]
+full_scale = "2 A"
+resolution = "1 µA"
+resolution_included = true  # TODO: check this
+max_reading = "2.2 A"   # 10 % over range
+accuracy = [{ of_reading = "1.1 %", of_range = "0.06 %" }, { of_reading = "1.1 %", of_range = "0.06 %" }, { of_reading = "1.1 %", of_range = "0.06 %" }]
+tempco = { of_reading = "0.1 %", of_range = "0.006 %" }
+
+[[function."aci.3Hz-5Hz".range]]
+full_scale = "10 A"
+resolution = "10 µA"
+resolution_included = true  # TODO: check this
+accuracy = [{ of_reading = "1.1 %", of_range = "0.08 %" }, { of_reading = "1.1 %", of_range = "0.1 %" }, { of_reading = "1.1 %", of_range = "0.1 %" }]
+tempco = { of_reading = "0.1 %", of_range = "0.008 %" }
+
+# true RMS AC current, 5Hz-10Hz. Typical only for 200 µA, 2 mA, 2 A and 10 A above 1 kHz
+[function."aci.5Hz-10Hz"]
+unit = "A"
+
+[[function."aci.5Hz-10Hz".range]]
+full_scale = "200 µA"
+resolution = "0.1 nA"
+resolution_included = true  # TODO: check this
+max_reading = "220 µA"   # 10 % over range
+accuracy = [{ of_reading = "0.35 %", of_range = "0.06 %" }, { of_reading = "0.35 %", of_range = "0.06 %" }, { of_reading = "0.35 %", of_range = "0.06 %" }]
+tempco = { of_reading = "0.1 %", of_range = "0.005 %" }
+
+[[function."aci.5Hz-10Hz".range]]
+full_scale = "2 mA"
+resolution = "1 nA"
+resolution_included = true  # TODO: check this
+max_reading = "2.2 mA"   # 10 % over range
+accuracy = [{ of_reading = "0.3 %", of_range = "0.04 %" }, { of_reading = "0.3 %", of_range = "0.04 %" }, { of_reading = "0.3 %", of_range = "0.04 %" }]
+tempco = { of_reading = "0.035 %", of_range = "0.005 %" }
+
+[[function."aci.5Hz-10Hz".range]]
+full_scale = "20 mA"
+resolution = "10 nA"
+resolution_included = true  # TODO: check this
+max_reading = "22 mA"   # 10 % over range
+accuracy = [{ of_reading = "0.35 %", of_range = "0.06 %" }, { of_reading = "0.35 %", of_range = "0.06 %" }, { of_reading = "0.35 %", of_range = "0.06 %" }]
+tempco = { of_reading = "0.1 %", of_range = "0.005 %" }
+
+[[function."aci.5Hz-10Hz".range]]
+full_scale = "200 mA"
+resolution = "100 nA"
+resolution_included = true  # TODO: check this
+max_reading = "220 mA"   # 10 % over range
+accuracy = [{ of_reading = "0.3 %", of_range = "0.04 %" }, { of_reading = "0.3 %", of_range = "0.04 %" }, { of_reading = "0.3 %", of_range = "0.04 %" }]
+tempco = { of_reading = "0.035 %", of_range = "0.006 %" }
+
+[[function."aci.5Hz-10Hz".range]]
+full_scale = "2 A"
+resolution = "1 µA"
+resolution_included = true  # TODO: check this
+max_reading = "2.2 A"   # 10 % over range
+accuracy = [{ of_reading = "0.35 %", of_range = "0.06 %" }, { of_reading = "0.35 %", of_range = "0.06 %" }, { of_reading = "0.35 %", of_range = "0.06 %" }]
+tempco = { of_reading = "0.035 %", of_range = "0.006 %" }
+
+[[function."aci.5Hz-10Hz".range]]
+full_scale = "10 A"
+resolution = "10 µA"
+resolution_included = true  # TODO: check this
+accuracy = [{ of_reading = "0.35 %", of_range = "0.08 %" }, { of_reading = "0.35 %", of_range = "0.1 %" }, { of_reading = "0.35 %", of_range = "0.1 %" }]
+tempco = { of_reading = "0.035 %", of_range = "0.008 %" }
+
+# true RMS AC current, 10Hz-5kHz. Typical only for 200 µA, 2 mA, 2 A and 10 A above 1 kHz
+[function."aci.10Hz-5kHz"]
+unit = "A"
+
+[[function."aci.10Hz-5kHz".range]]
+full_scale = "200 µA"
+resolution = "0.1 nA"
+resolution_included = true  # TODO: check this
+max_reading = "220 µA"   # 10 % over range
+accuracy = [{ of_reading = "0.15 %", of_range = "0.06 %" }, { of_reading = "0.15 %", of_range = "0.06 %" }, { of_reading = "0.15 %", of_range = "0.06 %" }]
+tempco = { of_reading = "0.015 %", of_range = "0.005 %" }
+
+[[function."aci.10Hz-5kHz".range]]
+full_scale = "2 mA"
+resolution = "1 nA"
+resolution_included = true  # TODO: check this
+max_reading = "2.2 mA"   # 10 % over range
+accuracy = [{ of_reading = "0.12 %", of_range = "0.04 %" }, { of_reading = "0.12 %", of_range = "0.04 %" }, { of_reading = "0.12 %", of_range = "0.04 %" }]
+tempco = { of_reading = "0.015 %", of_range = "0.005 %" }
+
+[[function."aci.10Hz-5kHz".range]]
+full_scale = "20 mA"
+resolution = "10 nA"
+resolution_included = true  # TODO: check this
+max_reading = "22 mA"   # 10 % over range
+accuracy = [{ of_reading = "0.15 %", of_range = "0.06 %" }, { of_reading = "0.15 %", of_range = "0.06 %" }, { of_reading = "0.15 %", of_range = "0.06 %" }]
+tempco = { of_reading = "0.015 %", of_range = "0.005 %" }
+
+[[function."aci.10Hz-5kHz".range]]
+full_scale = "200 mA"
+resolution = "100 nA"
+resolution_included = true  # TODO: check this
+max_reading = "220 mA"   # 10 % over range
+accuracy = [{ of_reading = "0.1 %", of_range = "0.04 %" }, { of_reading = "0.1 %", of_range = "0.04 %" }, { of_reading = "0.1 %", of_range = "0.04 %" }]
+tempco = { of_reading = "0.015 %", of_range = "0.006 %" }
+
+[[function."aci.10Hz-5kHz".range]]
+full_scale = "2 A"
+resolution = "1 µA"
+resolution_included = true  # TODO: check this
+max_reading = "2.2 A"   # 10 % over range
+accuracy = [{ of_reading = "0.15 %", of_range = "0.06 %" }, { of_reading = "0.15 %", of_range = "0.06 %" }, { of_reading = "0.15 %", of_range = "0.06 %" }]
+tempco = { of_reading = "0.015 %", of_range = "0.006 %" }
+
+[[function."aci.10Hz-5kHz".range]]
+full_scale = "10 A"
+resolution = "10 µA"
+resolution_included = true  # TODO: check this
+accuracy = [{ of_reading = "0.15 %", of_range = "0.08 %" }, { of_reading = "0.15 %", of_range = "0.1 %" }, { of_reading = "0.15 %", of_range = "0.1 %" }]
+tempco = { of_reading = "0.015 %", of_range = "0.008 %" }
+
+# true RMS AC current, 5kHz-10kHz. Typical only for 200 µA, 2 mA, 2 A and 10 A above 1 kHz
+[function."aci.5kHz-10kHz"]
+unit = "A"
+
+[[function."aci.5kHz-10kHz".range]]
+full_scale = "200 µA"
+resolution = "0.1 nA"
+resolution_included = true  # TODO: check this
+max_reading = "220 µA"   # 10 % over range
+accuracy = [{ of_reading = "0.35 %", of_range = "0.7 %" }, { of_reading = "0.35 %", of_range = "0.7 %" }, { of_reading = "0.35 %", of_range = "0.7 %" }]
+tempco = { of_reading = "0.03 %", of_range = "0.005 %" }
+
+[[function."aci.5kHz-10kHz".range]]
+full_scale = "2 mA"
+resolution = "1 nA"
+resolution_included = true  # TODO: check this
+max_reading = "2.2 mA"   # 10 % over range
+accuracy = [{ of_reading = "0.2 %", of_range = "0.25 %" }, { of_reading = "0.2 %", of_range = "0.25 %" }, { of_reading = "0.2 %", of_range = "0.25 %" }]
+tempco = { of_reading = "0.03 %", of_range = "0.005 %" }
+
+[[function."aci.5kHz-10kHz".range]]
+full_scale = "20 mA"
+resolution = "10 nA"
+resolution_included = true  # TODO: check this
+max_reading = "22 mA"   # 10 % over range
+accuracy = [{ of_reading = "0.35 %", of_range = "0.7 %" }, { of_reading = "0.35 %", of_range = "0.7 %" }, { of_reading = "0.35 %", of_range = "0.7 %" }]
+tempco = { of_reading = "0.03 %", of_range = "0.005 %" }
+
+[[function."aci.5kHz-10kHz".range]]
+full_scale = "200 mA"
+resolution = "100 nA"
+resolution_included = true  # TODO: check this
+max_reading = "220 mA"   # 10 % over range
+accuracy = [{ of_reading = "0.2 %", of_range = "0.25 %" }, { of_reading = "0.2 %", of_range = "0.25 %" }, { of_reading = "0.2 %", of_range = "0.25 %" }]
+tempco = { of_reading = "0.03 %", of_range = "0.006 %" }
+
+[[function."aci.5kHz-10kHz".range]]
+full_scale = "2 A"
+resolution = "1 µA"
+resolution_included = true  # TODO: check this
+max_reading = "2.2 A"   # 10 % over range
+accuracy = [{ of_reading = "0.35 %", of_range = "0.7 %" }, { of_reading = "0.35 %", of_range = "0.7 %" }, { of_reading = "0.35 %", of_range = "0.7 %" }]
+tempco = { of_reading = "0.03 %", of_range = "0.006 %" }
+
+# frequency, 3Hz-5Hz, 200 mV to 750 V
+[function."frequency.3Hz-5Hz"]
+unit = "Hz"
+
+[[function."frequency.3Hz-5Hz".range]]
+full_scale = "5 Hz"   # upper edge of the band
+resolution_included = true   # 0.1 ppm at 1 s gate time
+accuracy = [{ of_reading = "0.07 %" }, { of_reading = "0.07 %" }, { of_reading = "0.07 %" }]
+tempco = { of_reading = "0.005 %" }
+
+# frequency, 5Hz-10Hz, 200 mV to 750 V
+[function."frequency.5Hz-10Hz"]
+unit = "Hz"
+
+[[function."frequency.5Hz-10Hz".range]]
+full_scale = "10 Hz"   # upper edge of the band
+resolution_included = true   # 0.1 ppm at 1 s gate time
+accuracy = [{ of_reading = "0.04 %" }, { of_reading = "0.04 %" }, { of_reading = "0.04 %" }]
+tempco = { of_reading = "0.005 %" }
+
+# frequency, 10Hz-40Hz, 200 mV to 750 V
+[function."frequency.10Hz-40Hz"]
+unit = "Hz"
+
+[[function."frequency.10Hz-40Hz".range]]
+full_scale = "40 Hz"   # upper edge of the band
+resolution_included = true   # 0.1 ppm at 1 s gate time
+accuracy = [{ of_reading = "0.02 %" }, { of_reading = "0.02 %" }, { of_reading = "0.02 %" }]
+tempco = { of_reading = "0.001 %" }
+
+# frequency, 40Hz-300kHz, 200 mV to 750 V
+[function."frequency.40Hz-300kHz"]
+unit = "Hz"
+
+[[function."frequency.40Hz-300kHz".range]]
+full_scale = "300 kHz"   # upper edge of the band
+resolution_included = true   # 0.1 ppm at 1 s gate time
+accuracy = [{ of_reading = "0.005 %" }, { of_reading = "0.006 %" }, { of_reading = "0.007 %" }]
+tempco = { of_reading = "0.001 %" }
+
+# frequency, 300kHz-1MHz, 200 mV to 750 V
+[function."frequency.300kHz-1MHz"]
+unit = "Hz"
+
+[[function."frequency.300kHz-1MHz".range]]
+full_scale = "1 MHz"   # upper edge of the band
+resolution_included = true   # 0.1 ppm at 1 s gate time
+accuracy = [{ of_reading = "0.005 %" }, { of_reading = "0.006 %" }, { of_reading = "0.007 %" }]
+tempco = { of_reading = "0.001 %" }
+
+[function."capacitance"]
+unit = "F"
+
+[[function."capacitance".range]]
+# 1 year only. The 24 h and 90 d columns repeat it. TODO: check this
+full_scale = "2 nF"
+resolution = "0.1 pF"
+resolution_included = true  # TODO: check this
+max_reading = "2.2 nF"   # 10 % over range
+accuracy = [{ of_reading = "2 %", of_range = "2.4 %" }, { of_reading = "2 %", of_range = "2.4 %" }, { of_reading = "2 %", of_range = "2.4 %" }]
+tempco = { of_reading = "0.05 %", of_range = "0.06 %" }
+
+[[function."capacitance".range]]
+# 1 year only. The 24 h and 90 d columns repeat it. TODO: check this
+full_scale = "20 nF"
+resolution = "1 pF"
+resolution_included = true  # TODO: check this
+max_reading = "22 nF"   # 10 % over range
+accuracy = [{ of_reading = "1 %", of_range = "0.1 %" }, { of_reading = "1 %", of_range = "0.1 %" }, { of_reading = "1 %", of_range = "0.1 %" }]
+tempco = { of_reading = "0.05 %", of_range = "0.01 %" }
+
+[[function."capacitance".range]]
+# 1 year only. The 24 h and 90 d columns repeat it. TODO: check this
+full_scale = "200 nF"
+resolution = "10 pF"
+resolution_included = true  # TODO: check this
+max_reading = "220 nF"   # 10 % over range
+accuracy = [{ of_reading = "1 %", of_range = "0.1 %" }, { of_reading = "1 %", of_range = "0.1 %" }, { of_reading = "1 %", of_range = "0.1 %" }]
+tempco = { of_reading = "0.01 %", of_range = "0.01 %" }
+
+[[function."capacitance".range]]
+# 1 year only. The 24 h and 90 d columns repeat it. TODO: check this
+full_scale = "2 µF"
+resolution = "0.1 nF"
+resolution_included = true  # TODO: check this
+max_reading = "2.2 µF"   # 10 % over range
+accuracy = [{ of_reading = "1 %", of_range = "0.1 %" }, { of_reading = "1 %", of_range = "0.1 %" }, { of_reading = "1 %", of_range = "0.1 %" }]
+tempco = { of_reading = "0.01 %", of_range = "0.01 %" }
+
+[[function."capacitance".range]]
+# 1 year only. The 24 h and 90 d columns repeat it. TODO: check this
+full_scale = "20 µF"
+resolution = "1 nF"
+resolution_included = true  # TODO: check this
+max_reading = "22 µF"   # 10 % over range
+accuracy = [{ of_reading = "1 %", of_range = "0.1 %" }, { of_reading = "1 %", of_range = "0.1 %" }, { of_reading = "1 %", of_range = "0.1 %" }]
+tempco = { of_reading = "0.01 %", of_range = "0.01 %" }
+
+[[function."capacitance".range]]
+# 1 year only. The 24 h and 90 d columns repeat it. TODO: check this
+full_scale = "200 µF"
+resolution = "10 nF"
+resolution_included = true  # TODO: check this
+max_reading = "220 µF"   # 10 % over range
+accuracy = [{ of_reading = "1 %", of_range = "0.1 %" }, { of_reading = "1 %", of_range = "0.1 %" }, { of_reading = "1 %", of_range = "0.1 %" }]
+tempco = { of_reading = "0.01 %", of_range = "0.01 %" }
+
+[[function."capacitance".range]]
+# 1 year only. The 24 h and 90 d columns repeat it. TODO: check this
+full_scale = "2 mF"
+resolution = "0.1 µF"
+resolution_included = true  # TODO: check this
+max_reading = "2.2 mF"   # 10 % over range
+accuracy = [{ of_reading = "1 %", of_range = "0.1 %" }, { of_reading = "1 %", of_range = "0.1 %" }, { of_reading = "1 %", of_range = "0.1 %" }]
+tempco = { of_reading = "0.01 %", of_range = "0.01 %" }
+
+[[function."capacitance".range]]
+# 1 year only. The 24 h and 90 d columns repeat it. TODO: check this
+full_scale = "20 mF"
+resolution = "1 µF"
+resolution_included = true  # TODO: check this
+max_reading = "22 mF"   # 10 % over range
+accuracy = [{ of_reading = "1 %", of_range = "0.1 %" }, { of_reading = "1 %", of_range = "0.1 %" }, { of_reading = "1 %", of_range = "0.1 %" }]
+tempco = { of_reading = "0.01 %", of_range = "0.01 %" }
+
+[[function."capacitance".range]]
+# 1 year only. The 24 h and 90 d columns repeat it. TODO: check this
+full_scale = "100 mF"
+resolution = "10 µF"
+resolution_included = true  # TODO: check this
+max_reading = "110 mF"   # 10 % over range
+accuracy = [{ of_reading = "3 %", of_range = "0.1 %" }, { of_reading = "3 %", of_range = "0.1 %" }, { of_reading = "3 %", of_range = "0.1 %" }]
+tempco = { of_reading = "0.05 %", of_range = "0.02 %" }
+
+
+# Worked examples, computed by hand from the values above.
+[[check]]   # 0.0040 % × 10 V + 0.0004 % × 20 V
+function = "dcv"
+range = "20 V"
+reading = "10 V"
+interval = "1 year"
+half_width = "0.48 mV"
+
+[[check]]   # 0.080 % × 1 A + 0.005 % × 2 A
+function = "dci"
+range = "2 A"
+reading = "1 A"
+interval = "90 d"
+half_width = "0.9 mA"
+
+[[check]]   # 0.0020 % × 1 kΩ + 0.0005 % × 2 kΩ
+function = "resistance"
+range = "2 kΩ"
+reading = "1 kΩ"
+interval = "24 h"
+half_width = "0.03 Ω"
+
+[[check]]   # 0.06 % × 1 V + 0.03 % × 2 V
+function = "acv.10Hz-20kHz"
+range = "2 V"
+reading = "1 V"
+interval = "1 year"
+half_width = "1.2 mV"
+
+[[check]]   # 0.007 % × 1 kHz
+function = "frequency.40Hz-300kHz"
+range = "300 kHz"
+reading = "1 kHz"
+interval = "1 year"
+half_width = "0.07 Hz"
+
+[[check]]   # 1 % × 1 µF + 0.1 % × 2 µF
+function = "capacitance"
+range = "2 µF"
+reading = "1 µF"
+interval = "1 year"
+half_width = "12 nF"

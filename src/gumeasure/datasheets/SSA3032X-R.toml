@@ -1,0 +1,27 @@
+#:schema ../schema/datasheet.schema.json
+# Typed from the Siglent data sheet "SSA3000X-R Real-Time Spectrum Analyzer", DS0703R_E02F,
+# section Amplitude Accuracy and Range Specifications. Check every value against the
+# document before a release.
+schema = "gumeasure.datasheet/1"
+model  = "SSA3032X-R"
+vendor = "Siglent Technologies"
+source = "Siglent SSA3000X-R Real-Time Spectrum Analyzer data sheet, DS0703R_E02F, Amplitude Accuracy and Range Specifications, Total amplitude accuracy ±0.7 dB: 20 °C to 30 °C, fc > 100 kHz, input -50 dBm to 0 dBm, att = 20 dB, RBW = VBW = 1 kHz, peak detector, preamp off, 95 % reliability. Values typed from the PDF, to be checked against it before a release"
+tcal   = "25 °C"
+band   = "5 K"
+# The marker frequency uncertainty depends on span and RBW and is not given here.
+
+[function."level"]
+unit = "dBm"
+
+[[function."level".range]]
+full_scale          = "0 dBm"   # highest input level of the specification
+resolution_included = true
+# TODO: check this. The data sheet states 95 % reliability. It is taken as a rectangular
+# half-width, which gives a larger u than a normal distribution would.
+accuracy            = [{ offset = "0.7 dB" }]
+
+[[check]]
+function   = "level"
+range      = "0 dBm"
+reading    = "-20 dBm"
+half_width = "0.7 dB"

@@ -1,0 +1,60 @@
+#:schema ../schema/datasheet.schema.json
+# Typed from the Siglent data sheet "SDG6000X Pulse/Arbitrary Waveform Generator",
+# Date Sheet-2018.04, tables Frequency, Sine, DC and Output. Check every value against the
+# document before a release.
+schema = "gumeasure.datasheet/1"
+model  = "SDG6022X"
+vendor = "Siglent Technologies"
+source = "Siglent SDG6000X Pulse/Arbitrary Waveform Generator data sheet, Date Sheet-2018.04, tables Frequency, Sine, DC and Output. Valid within the calibration period after 30 minutes at 18 °C to 28 °C. Amplitude and DC for HiZ load, halved into 50 Ω. Values typed from the PDF, to be checked against it before a release"
+tcal      = "23 °C"   # middle of 18 °C to 28 °C
+band      = "5 K"
+intervals = ["1 year"]   # frequency aging is stated for the first year
+
+# Settings: the value is the set value, the accuracy that of the output.
+[function."output.frequency"]
+unit = "Hz"
+
+[[function."output.frequency".range]]
+full_scale          = "200 MHz"   # sine
+resolution          = "1 µHz"
+resolution_included = true   # the set value is exact
+# TODO: check this. Initial accuracy ±2 ppm at 0 °C to 40 °C plus 1-year aging ±1 ppm.
+accuracy            = [{ of_reading = "3 ppm" }]
+
+[function."output.dc"]   # DC waveform, HiZ load
+unit = "V"
+
+[[function."output.dc".range]]
+full_scale          = "10 V"
+resolution_included = true   # resolution not stated
+accuracy            = [{ of_reading = "1 %", offset = "2 mV" }]
+
+[function."output.amplitude.10kHz"]   # peak to peak, 10 kHz sine, 0 V offset, HiZ load
+unit = "V"
+
+[[function."output.amplitude.10kHz".range]]
+full_scale          = "20 V"
+resolution_included = true   # resolution not stated
+accuracy            = [{ of_reading = "1 %", offset = "1 mV" }]
+
+# Worked examples, computed by hand from the values above.
+[[check]]   # 3 ppm × 10 MHz
+function   = "output.frequency"
+range      = "200 MHz"
+reading    = "10 MHz"
+interval   = "1 year"
+half_width = "30 Hz"
+
+[[check]]   # 1 % × 5 V + 2 mV
+function   = "output.dc"
+range      = "10 V"
+reading    = "5 V"
+interval   = "1 year"
+half_width = "52 mV"
+
+[[check]]   # 1 % × 1 V + 1 mV
+function   = "output.amplitude.10kHz"
+range      = "20 V"
+reading    = "1 V"
+interval   = "1 year"
+half_width = "11 mV"

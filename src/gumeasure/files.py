@@ -76,10 +76,11 @@ class RangeFile:
     __pydantic_config__: ClassVar[ConfigDict] = _STRICT
 
     full_scale: QuantityStr
-    resolution: QuantityStr
     resolution_included: bool
     accuracy: list[AccuracyFile]
+    resolution: QuantityStr | None = None
     tempco: AccuracyFile | None = None
+    max_reading: QuantityStr | None = None
 
 
 @dataclass(frozen=True)
@@ -111,9 +112,9 @@ class DatasheetFile:
     model: str
     vendor: str
     source: str
-    tcal: QuantityStr
     band: QuantityStr
     function: dict[str, FunctionFile]
+    tcal: QuantityStr | None = None
     intervals: list[QuantityStr] = field(default_factory=list)
     check: list[CheckFile] = field(default_factory=list)
 
@@ -259,6 +260,7 @@ def _datasheet(path: str, data: dict[str, Any], sha: str) -> Datasheet:
                             resolution_included=r.resolution_included,
                             accuracy=tuple(_accuracy(a) for a in r.accuracy),
                             tempco=None if r.tempco is None else _accuracy(r.tempco),
+                            max_reading=r.max_reading,
                         )
                         for r in fn.range
                     ),

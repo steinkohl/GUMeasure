@@ -1,12 +1,25 @@
 """Siglent data sheets.
 
+SDM3065X, SDM3065X-SC, SDL1020X, SDG6022X, SDG6032X, SDG6052X and SSA3032X-R are typed from
+the vendor data sheets named in their source and loaded from their TOML twins. Check them
+against the documents before a release.
+
 SPD1305X: values taken over from agnostibench. They must be checked against the Siglent
 SPD1000X data sheet DS0501X before the first release. The worked examples are computed by hand
 from these values, not taken from the data sheet. Its TOML twin is SPD1305X.toml.
 """
 
+from gumeasure.datasheets import from_twin
 from gumeasure.model import Accuracy, Check, Datasheet, Function, Range
 from gumeasure.units import frac, q
+
+SDM3065X = from_twin("SDM3065X")
+SDM3065X_SC = from_twin("SDM3065X-SC")
+SDL1020X = from_twin("SDL1020X")
+SDG6022X = from_twin("SDG6022X")
+SDG6032X = from_twin("SDG6032X")
+SDG6052X = from_twin("SDG6052X")
+SSA3032X_R = from_twin("SSA3032X-R")
 
 SPD1305X = Datasheet(
     model="SPD1305X",

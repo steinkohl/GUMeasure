@@ -232,11 +232,17 @@ class _Evaluation:
             over = top > rng.full_scale + 1e-12
         else:
             top = max(abs(v) for v in self.values)
-            over = top > rng.full_scale * (1 + 1e-12)
+            limit = rng.full_scale if rng.max_reading is None else rng.max_reading
+            over = top > limit * (1 + 1e-12)
         if over:
             self.issue(
                 "overrange",
-                f"A reading of {self.fmt(top)} is above the full scale {self.fmt(rng.full_scale)}.",
+                f"A reading of {self.fmt(top)} is above the {self.fmt(rng.full_scale)} range"
+                + (
+                    "."
+                    if units.is_logarithmic(r.unit) or rng.max_reading is None
+                    else f", which the data sheet covers up to {self.fmt(rng.max_reading)}."
+                ),
             )
 
         # 4. Mean.
@@ -334,6 +340,14 @@ class _Evaluation:
     def temperature(self, x: float) -> None:
         r = self.record
         ds = r.datasheet
+        if ds.tcal_degC is None:
+            # TODO: check this (D24)
+            self.issue(
+                "temperature-assumed",
+                f"Data sheet {ds.model} refers to the calibration temperature and no "
+                "certificate in force states it. Assumed within the band.",
+            )
+            return
         if r.temperature_degC is None:
             # D8: assumed within the band.
             self.issue(

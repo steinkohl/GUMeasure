@@ -57,6 +57,7 @@ class RangeRecord:
     full_scale: float
     resolution: float
     resolution_included: bool
+    max_reading: float | None
     accuracy: tuple[AccuracyRecord, ...]
     tempco: AccuracyRecord | None
 
@@ -69,7 +70,7 @@ class DatasheetRecord:
     model: str
     source: str
     custom: bool
-    tcal_degC: float
+    tcal_degC: float | None
     band_K: float
     intervals: tuple[str, ...]
     intervals_d: tuple[float, ...]
@@ -162,14 +163,23 @@ def build(
             model=ds.model,
             source=ds.source,
             custom=ds.custom,
-            tcal_degC=units.temperature_degc(ds.tcal),
+            # TODO: check this (D24). Without tcal in the data sheet, the temperature of the
+            # certificate in force is the calibration temperature.
+            tcal_degC=units.temperature_degc(ds.tcal)
+            if ds.tcal is not None
+            else None
+            if current is None or current.temperature is None
+            else units.temperature_degc(current.temperature),
             band_K=units.difference_kelvin(ds.band),
             intervals=tuple(interval_name(i) for i in ds.intervals),
             intervals_d=tuple(units.days(i) for i in ds.intervals),
             range=RangeRecord(
                 full_scale=units.magnitude(range_.full_scale, unit),
-                resolution=units.magnitude(range_.resolution, unit),
+                resolution=range_.resolution_in(unit),
                 resolution_included=range_.resolution_included,
+                max_reading=None
+                if range_.max_reading is None
+                else units.magnitude(range_.max_reading, unit),
                 accuracy=tuple(_accuracy(a, unit) for a in range_.accuracy),
                 tempco=None if range_.tempco is None else _accuracy(range_.tempco, unit),
             ),
