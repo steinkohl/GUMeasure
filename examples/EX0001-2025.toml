@@ -1,0 +1,20 @@
+#:schema ../src/gumeasure/schema/calibration.schema.json
+# Fictional certificate for the fictional EXAMPLE-DMM, the one before EX0001-2026.toml.
+schema      = "gumeasure.calibration/1"
+model       = "EXAMPLE-DMM"
+serial      = "EX0001"
+certificate = "EX-2025-0017"
+laboratory  = "Example calibration laboratory"
+accredited  = true
+date        = 2025-03-02
+due         = 2026-03-02
+temperature = "23 °C"
+deviation_sign = "indication - reference"
+
+[[point]]
+function  = "dcv"
+range     = "10 V"
+reference = "5 V"
+deviation = "0.010 mV"
+U         = "0.030 mV"
+k         = 2

@@ -1,0 +1,28 @@
+#:schema ../src/gumeasure/schema/calibration.schema.json
+# Fictional certificate for the fictional EXAMPLE-DMM. For the tests and documentation only.
+schema      = "gumeasure.calibration/1"
+model       = "EXAMPLE-DMM"
+serial      = "EX0001"
+certificate = "EX-2026-0042"
+laboratory  = "Example calibration laboratory"
+accredited  = true
+date        = 2026-03-02
+due         = 2027-03-02
+temperature = "23 °C"
+deviation_sign = "indication - reference"  # sign convention, required, only this value in version 1
+
+[[point]]
+function  = "dcv"
+range     = "10 V"
+reference = "5 V"
+deviation = "0.040 mV"
+U         = "0.030 mV"
+k         = 2
+
+[[point]]
+function  = "dcv"
+range     = "10 V"
+reference = "10 V"
+deviation = "0.070 mV"
+U         = "0.040 mV"
+k         = 2

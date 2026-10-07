@@ -1,0 +1,28 @@
+#:schema ../../src/gumeasure/schema/calibration.schema.json
+# Fictional certificate with values, for the tests of gumeasure only.
+schema      = "gumeasure.calibration/1"
+model       = "SPD1305X"
+serial      = "TEST0002"
+certificate = "TEST-2026-1"
+laboratory  = "Fictional laboratory for the tests of gumeasure"
+accredited  = true
+date        = 2026-01-15
+due         = 2027-01-15
+temperature = "23 °C"
+deviation_sign = "indication - reference"
+
+[[point]]
+function  = "readback.current"
+range     = "5 A"
+reference = "0.1 A"
+deviation = "1 mA"
+U         = "0.5 mA"
+k         = 2
+
+[[point]]
+function  = "readback.current"
+range     = "5 A"
+reference = "1 A"
+deviation = "2 mA"
+U         = "1 mA"
+k         = 2

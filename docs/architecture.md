@@ -203,6 +203,7 @@ class Origin:
     "custom": false,
     "tcal_degC": 23.0,
     "band_K": 5.0,
+    "intervals": ["24 hour", "90 day", "1 year"],
     "intervals_d": [1.0, 90.0, 365.25],
     "range": {
       "full_scale": 10.0,
@@ -654,6 +655,7 @@ Every item below marked `#todo: check this` was chosen without the owner. Code t
 | D19 | Which deviation `certificate-out-of-spec` uses for readings after the certificate | The as-left deviation. An as-found deviation out of specification is an error in `gumeasure check` and `Instrument.check()`, but does not block current readings. | An as-found deviation out of specification concerns the period before the adjustment. The as-left deviation is what holds for current readings. Departs from brief §5. | `#todo: check this` |
 | D20 | Short-term term (D1) with exactly one interval in the data sheet | Only with two or more intervals. With one interval mode B has no short-term term. | With one interval the only column already contains the drift. `drift = "history"` would count drift twice. | `#todo: check this` |
 | D21 | Reference temperature in mode B | `tcal` and `band` of the data sheet, as in mode A. The certificate temperature is recorded in the snapshot but not used. | The temperature coefficient of the data sheet is stated relative to `tcal`. | `#todo: check this` |
+| D22 | Temperature outside the band and no `tempco` in the data sheet | New issue `tempco-unknown`, severity error. The accuracy of the data sheet does not hold there. | The issue table of the brief has no code for this case. | `#todo: check this` |
 
 ---
 

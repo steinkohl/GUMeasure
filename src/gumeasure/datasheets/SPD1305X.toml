@@ -1,0 +1,41 @@
+#:schema ../schema/datasheet.schema.json
+# Twin of gumeasure.datasheets.siglent.SPD1305X.
+# Values taken over from agnostibench. Check them against Siglent DS0501X before the first
+# release. The worked examples are computed by hand from these values.
+schema = "gumeasure.datasheet/1"
+model  = "SPD1305X"
+vendor = "Siglent Technologies"
+source = "Siglent SPD1000X data sheet DS0501X, valid at 25 ± 5 °C. Values taken over from agnostibench, to be checked against the data sheet before the first release"
+tcal   = "25 °C"
+band   = "5 K"
+# no intervals: one accuracy column, valid until the calibration is due
+
+[function."readback.voltage"]
+unit = "V"
+
+[[function."readback.voltage".range]]
+full_scale          = "30 V"
+resolution          = "1 mV"
+resolution_included = false
+accuracy            = [{ of_reading = "0.03 %", offset = "10 mV" }]
+
+[function."readback.current"]
+unit = "A"
+
+[[function."readback.current".range]]
+full_scale          = "5 A"
+resolution          = "1 mA"
+resolution_included = false
+accuracy            = [{ of_reading = "0.3 %", offset = "10 mA" }]
+
+[[check]]   # 0.03 % × 12 V + 10 mV
+function   = "readback.voltage"
+range      = "30 V"
+reading    = "12 V"
+half_width = "13.6 mV"
+
+[[check]]   # 0.3 % × 2 A + 10 mA
+function   = "readback.current"
+range      = "5 A"
+reading    = "2 A"
+half_width = "16 mA"

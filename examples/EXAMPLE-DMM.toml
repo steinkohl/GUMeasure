@@ -1,0 +1,32 @@
+#:schema ../src/gumeasure/schema/datasheet.schema.json
+# Fictional data sheet. It exists for the tests and the documentation of gumeasure.
+# No real instrument has these values. Copy of the built-in gumeasure:example.EXAMPLE_DMM.
+schema    = "gumeasure.datasheet/1"
+model     = "EXAMPLE-DMM"
+vendor    = "Example Instruments"
+source    = "Fictional data sheet for the tests and documentation of gumeasure"
+tcal      = "23 °C"
+band      = "5 K"
+intervals = ["24 h", "90 d", "1 year"]
+
+[function.dcv]
+unit = "V"
+
+[[function.dcv.range]]
+full_scale          = "10 V"
+resolution          = "10 µV"
+resolution_included = true
+# one entry per interval, in the order of `intervals`
+accuracy = [
+  { of_reading = "0.0015 %", of_range = "0.0004 %" },
+  { of_reading = "0.0025 %", of_range = "0.0005 %" },
+  { of_reading = "0.0035 %", of_range = "0.0005 %" },
+]
+tempco = { of_reading = "0.0005 %", of_range = "0.0001 %" }   # per K outside the band
+
+[[check]]
+function   = "dcv"
+range      = "10 V"
+reading    = "7 V"
+interval   = "1 year"
+half_width = "0.295 mV"

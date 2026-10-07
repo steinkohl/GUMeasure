@@ -1,0 +1,37 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install
+        run: uv sync --locked --all-extras
+      - name: ruff
+        run: |
+          uv run ruff check
+          uv run ruff format --check
+      - name: mypy
+        run: uv run mypy src
+      - name: pytest
+        run: uv run pytest
+      - name: gumeasure check
+        run: uv run gumeasure check src/gumeasure/datasheets examples
+      - name: Committed schemas match the code
+        run: |
+          for kind in datasheet calibration; do
+            uv run gumeasure schema "$kind" | diff -u "src/gumeasure/schema/$kind.schema.json" -
+          done
+      - name: Build
+        run: uv build
