@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="docs/logo/logo.svg" alt="gumeasure" width="420">
+</p>
+
 # gumeasure
 
 gumeasure gives every reading of a lab instrument its measurement uncertainty according to the
